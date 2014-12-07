@@ -85,6 +85,6 @@ done | sort -n
 ) > postbank.csv
 
 ### hier wird aus der (gerade erzeugten) PostBank-CVS-Datei eine QIF-Datei für GNUCash erzeugt
-awk -f postbanken.awk postbank.csv > postbank.qif
+awk -f $(dirname ${0})/postbanken.awk postbank.csv > postbank.qif
 
 ls -lh postbank.csv postbank.qif
