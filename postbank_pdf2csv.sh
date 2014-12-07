@@ -71,10 +71,10 @@ do
 
                               echo ""
                               ### original Postbank-Reihenfolge
-                              #echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2};${BETRAG2};${PM2};"
+                              echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2};${BETRAG2};${PM2};"
 
                               ### 1822-Reihenfolge
-                              echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PM2}${BETRAG2};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2}"
+                              #echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PM2}${BETRAG2};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2}"
 
                               WEITER="JA"
 
@@ -84,4 +84,7 @@ do
 done | sort -n
 ) > postbank.csv
 
-ls -lh postbank.csv
+### hier wird aus der (gerade erzeugten) PostBank-CVS-Datei eine QIF-Datei für GNUCash erzeugt
+awk -f postbanken.awk postbank.csv > postbank.qif
+
+ls -lh postbank.csv postbank.qif
