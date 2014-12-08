@@ -32,10 +32,11 @@ fi
 	cat "${1}" | grep -Ev '^Buchungstag' | while read ZEILE
 	do
 		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{ print $1 }')"
+		WERTSTELLUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{ print $2 }')"
+		BETRAG="$(echo "${ZEILE}" | awk -F';' '{ print $3}')"
 		PNN="$(echo "${ZEILE}" | awk -F';' '{ print $4 }')"
 		VERWENDUNGSZWECK="$(echo "${ZEILE}" | tr -s ';' '\n' | tail -n+5 | sed 's/.*/&,/' | tr -s '\n' ',')"
-		BETRAG="$(echo "${ZEILE}" | awk -F';' '{ print $3}')"
-		echo -e "D${BUCHUNGSDATUM}\nN${PNN}\nM${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
+		echo -e "D${BUCHUNGSDATUM}\nN${PNN}\nM${WERTSTELLUNGSDATUM} ${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
 	done
 ) > postbank.qif
 
