@@ -16,6 +16,10 @@ if [ -z "${1}" ] ; then
         exit 1
 fi
 
+if [ -z "${JAHR}" ] ; then
+        JAHR="$(date +'%Y')"
+fi
+
 #------------------------------------------------------------------------------#
 
 for CSVDATEI in ${@}
@@ -24,22 +28,16 @@ NEUERNAME="$(echo "${CSVDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//
 
 (echo '!Type:Bank'
 	###
-	### ACHTUNG!!!
-	### Diese Konvertierung funktioniert nur mit der
-	### "1822-Reihenfolge"-Einstellung (Standardeinstellung)
-	### in der Datei "postbank_pdf2csv.sh",
-	### weil der Verwendungszweck (Buchungsinformationen) eine undefinierte
-	### Anzahl an Trennzeichen (Semikolon) enthält.
-	### Um diese trotzdem sinnvoll verarbeiten zu können, müssen diese
-	### Informationen am Ende stehen.
+	### echo -n "Buchung;Wert;Vorgang/Buchungsinformation;Soll;Haben"
 	###
-	### echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PM2}${BETRAG2};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2}"
 	cat "${CSVDATEI}" | grep -Ev '^Buchung;' | while read ZEILE
 	do
-		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{ print $1 }')"
-		WERTSTELLUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{ print $2 }')"
-		BETRAG="$(echo "${ZEILE}" | awk -F';' '{print $4,$5}' | awk '{print $1,$2}')"
+		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' -v jahr=${JAHR} '{ gsub("[.]"," "); print $1,jahr }' | awk '{print $3"-"$2"-"$1}')"
+		WERTSTELLUNGSDATUM="$(echo "${ZEILE}" | awk -F';' -v jahr=${JAHR} '{ gsub("[.]"," "); print $2,jahr }' | awk '{print $3"-"$2"-"$1}')"
 		VERWENDUNGSZWECK="$(echo "${ZEILE}" | awk -F';' '{ print $3 }')"
+		NEG_BETR="$(echo "${ZEILE}" | awk -F';' '{print $4}' | awk '{print $2}')"
+		POS_BETR="$(echo "${ZEILE}" | awk -F';' '{print $5}' | awk '{print $2}')"
+		BETRAG="$(if [ -n "${NEG_BETR}" ] ; then echo "-${NEG_BETR}"; elif [ -n "${POS_BETR}" ] ; then echo "+${POS_BETR}"; fi)"
 		echo -e "D${BUCHUNGSDATUM}\nM${WERTSTELLUNGSDATUM} ${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
 	done
 ) > ${NEUERNAME}.qif
