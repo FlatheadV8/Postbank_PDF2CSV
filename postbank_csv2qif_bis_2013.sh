@@ -12,13 +12,16 @@
 #
 
 if [ -z "${1}" ] ; then
-        echo "${0} Datei1.csv"
+        echo "${0} Datei1.csv Datei2.csv Datei3.csv"
         exit 1
 fi
 
 #------------------------------------------------------------------------------#
 
-NEUERNAME="$(echo "${1}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
+for _datei in ${@}
+do
+
+NEUERNAME="$(echo "${_datei}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
 
 (echo '!Type:Bank'
 	###
@@ -32,7 +35,7 @@ NEUERNAME="$(echo "${1}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev
 	### Informationen am Ende stehen.
 	###
 	### echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PM2}${BETRAG2};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2}"
-	cat "${1}" | grep -Ev '^Buchungstag;' | while read ZEILE
+	cat "${_datei}" | grep -Ev '^Buchungstag;' | while read ZEILE
 	do
 		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{ print $1 }')"
 		WERTSTELLUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{ print $2 }')"
@@ -44,6 +47,8 @@ NEUERNAME="$(echo "${1}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev
 ) > ${NEUERNAME}.qif
 
 ls -lh ${NEUERNAME}.qif
+
+done
 
 #==============================================================================#
 exit
