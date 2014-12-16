@@ -1,31 +1,37 @@
 #!/bin/bash
 
-
 #
 # PDF -> XML -> CSV
 #
 
-
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
+
 if [ -z "${1}" ] ; then
 	echo "${0} Kontoauszug_der_Postbank.pdf"
 	exit 1
-else
-	PDFDATEI="${1}"
 fi
 
 echo "
-das kann jetzt ein paar Minuten dauern ...
+================================================================================
+=> das kann jetzt ein paar Minuten dauern ...
+================================================================================
 "
+
+VERZEICHNIS="$(dirname ${0})"
+
+for PDFDATEI in ${@}
+do
 
 #------------------------------------------------------------------------------#
 ### PDF -> XML+TXT
 
+unset NEUERNAME
 NEUERNAME="$(echo "${PDFDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
 #SEITEN="$(pdftohtml -c -i -xml -enc UTF-8 -noframes -nodrm -hidden "${PDFDATEI}" ${NEUERNAME}_alle_Seiten.xml | nl | awk '{print $1}' | head -n1 ; rm -f ${NEUERNAME}_alle_Seiten.xml)"
 #SEITEN="$(pdftohtml -c -i -xml -enc UTF-8 -noframes -nodrm -hidden "${PDFDATEI}" ${NEUERNAME}_alle_Seiten.xml | nl | awk '{print $1}' | tail -n1 ; rm -f ${NEUERNAME}_alle_Seiten.xml)"
 SEITEN="$(pdftohtml -c -i -xml -enc UTF-8 -noframes -nodrm -hidden "${PDFDATEI}" ${NEUERNAME}_alle_Seiten.xml | nl | awk '{print $1}' ; rm -f ${NEUERNAME}_alle_Seiten.xml)"
+unset DATEI_SEITEN
 for i in ${SEITEN}
 do
 	pdftohtml -c -i -xml -enc UTF-8 -noframes -nodrm -hidden -f ${i} -l ${i} "${PDFDATEI}" ${NEUERNAME}_Seite_${i}.xml >/dev/null
@@ -38,6 +44,7 @@ done
 #------------------------------------------------------------------------------#
 ### XML+TXT -> Text -> XML
 
+unset XMLDATEIEN
 XMLDATEIEN="$(for SEITE in ${DATEI_SEITEN}
 do
 	cat "${SEITE}.xml" | grep -E '^[<]text top=' | awk -F'>' '{print $1}' | nl | while read ZNR POSITION
@@ -56,7 +63,6 @@ echo "Buchung;Wert;Vorgang/Buchungsinformation;Soll;Haben" > ${NEUERNAME}.csv
 
 for EINEXML in ${XMLDATEIEN}
 do
-	CSVNAME="$(echo "${EINEXML}" | rev | sed 's/.*[.]//' | rev)"
 	#----------------------------------------------------------------------#
 	### Zeilen- und Spalten-Angaben extrahieren
 	### und Zeilen in die richtige Reihenfolge bringen
@@ -231,6 +237,9 @@ done | sed '/^Kontonummer;;BLZSumme Zahlungseing/,//d' >> ${NEUERNAME}.csv
 rm -f ${XMLDATEIEN}
 ls -lha ${NEUERNAME}.csv
 echo "
-libreoffice --calc ${NEUERNAME}.csv"
+libreoffice --calc ${NEUERNAME}.csv
+${VERZEICHNIS}/postbank_csv2qif.sh ${NEUERNAME}.csv
+------------------------------------------------------------------------"
+done
 
 #------------------------------------------------------------------------------#
