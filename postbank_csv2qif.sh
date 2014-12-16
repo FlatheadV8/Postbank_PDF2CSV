@@ -18,6 +18,8 @@ fi
 
 #------------------------------------------------------------------------------#
 
+NEUERNAME="$(echo "${1}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
+
 (echo '!Type:Bank'
 	###
 	### ACHTUNG!!!
@@ -30,18 +32,21 @@ fi
 	### Informationen am Ende stehen.
 	###
 	### echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PM2}${BETRAG2};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2}"
-	cat "${1}" | grep -Ev '^Buchungstag' | while read ZEILE
+	cat "${1}" | grep -Ev '^Buchung;' | while read ZEILE
 	do
 		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{ print $1 }')"
 		WERTSTELLUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{ print $2 }')"
-		BETRAG="$(echo "${ZEILE}" | awk -F';' '{ print $3}')"
-		PNN="$(echo "${ZEILE}" | awk -F';' '{ print $4 }')"
-		VERWENDUNGSZWECK="$(echo "${ZEILE}" | tr -s ';' '\n' | tail -n+5 | sed 's/.*/&,/' | tr -s '\n' ',')"
-		echo -e "D${BUCHUNGSDATUM}\nN${PNN}\nM${WERTSTELLUNGSDATUM} ${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
+		#BETRAG="$(echo "${ZEILE}" | awk -F';' '{ print $3}')"
+		BETRAG="$(echo "${ZEILE}" | awk -F';' '{print $4,$5}' | awk '{print $1,$2}')"
+		#PNN="$(echo "${ZEILE}" | awk -F';' '{ print $4 }')"
+		#VERWENDUNGSZWECK="$(echo "${ZEILE}" | tr -s ';' '\n' | tail -n+5 | sed 's/.*/&,/' | tr -s '\n' ',')"
+		VERWENDUNGSZWECK="$(echo "${ZEILE}" | awk -F';' '{ print $3 }')"
+		#echo -e "D${BUCHUNGSDATUM}\nN${PNN}\nM${WERTSTELLUNGSDATUM} ${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
+		echo -e "D${BUCHUNGSDATUM}\nM${WERTSTELLUNGSDATUM} ${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
 	done
-) > postbank.qif
+) > ${NEUERNAME}.qif
 
-ls -lh postbank.qif
+ls -lh ${NEUERNAME}.qif
 
 #==============================================================================#
 exit
