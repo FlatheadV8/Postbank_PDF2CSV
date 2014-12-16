@@ -9,24 +9,30 @@ In den Dateinamen der PDF-Dateien dürfen keine Leezeichen, Umlaute, Sonderzeich
 
 --------------------------------------------------------------------------------
 
-beispielsweise könnte man das so machen:
-
-    # mkdir test
-    # cd test
+beispielsweise könnte man das so machen,
+als erstes die neueste Version saugen:
     
-    # ~/bin/postbank_pdf2txt.sh ~/postbank/kontoauszuege/PB_KAZ_KtoNr_0908765403_10-09-2011_0219.pdf
-    
-    # ls -lh
-    -rw-r--r-- 1 fritz fritz 3,4K 2012-04-01 02:05 PB_KAZ_KtoNr_0908765403_10-09-2011_0219.txt
-    -rw-r--r-- 1 fritz fritz  278 2012-04-01 02:12 postbank.csv
-    
-    # libreoffice postbank.csv
+    wget https://github.com/FlatheadV8/Postbank_PDF2CSV/archive/1.2.0.tar.gz
 
-oder aber auch gleich alle Kontoauszüge vom ganzen Jahr:
+dann entpacken:
+    
+    tar xzvf 1.2.0.tar.gz
 
-    # mkdir 2011
-    # cd 2011
-    # ~/bin/postbank_pdf2txt.sh ~/postbank/kontoauszuege/2011/*.pdf
-    # libreoffice postbank.csv
+den Kontoauszug aus dem PDF-Format ins CSV-Format umwandeln:
+    
+    Postbank_PDF2CSV-1.2.0/postbank_pdf2csv.sh PB_KAZ_KtoNr_0903464503_11-11-2014_0437.pdf
+    
+    das kann jetzt ein paar Minuten dauern ...
+    
+    -rw-r--r-- 1 manfred manfred 2,2K Dez 16 03:33 PB_KAZ_KtoNr_0903464503_11-11-2014_0437.csv
+    
+    libreoffice --calc PB_KAZ_KtoNr_0903464503_11-11-2014_0437.csv
+
+evtl. die CSV-Datei ins QIF-Format umwandeln:
+    
+    Postbank_PDF2CSV-1.2.0/postbank_csv2qif.sh PB_KAZ_KtoNr_0903464503_11-11-2014_0437.csv 
+    -rw-r--r-- 1 manfred manfred 2,2K Dez 16 03:33 PB_KAZ_KtoNr_0903464503_11-11-2014_0437.qif
+
+Die Dateinamen dürfen keine Leerzeichen und keine Sonderzeichen (zum Beispiel Klammern) enthalten.
 
 Achtung, durch die vielen ineinander geschachtelten Schleifen, verursacht das Skript wärend seiner Laufzeit eine erhöhte Last und läuft relativ langsam.
