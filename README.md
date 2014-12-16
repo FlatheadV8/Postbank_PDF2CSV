@@ -8,6 +8,7 @@ Beide Dateien müssen im selben Verzeichnis liegen (z.B.: ~/bin/)!
 In den Dateinamen der PDF-Dateien dürfen keine Leezeichen, Umlaute, Sonderzeichen, Klammern o.ä. sein!
 
 --------------------------------------------------------------------------------
+Ab 2014:
 
 beispielsweise könnte man das so machen,
 als erstes die neueste Version saugen:
@@ -24,14 +25,29 @@ den Kontoauszug aus dem PDF-Format ins CSV-Format umwandeln:
     
     das kann jetzt ein paar Minuten dauern ...
     
-    -rw-r--r-- 1 manfred manfred 2,2K Dez 16 03:33 PB_KAZ_KtoNr_0903464503_11-11-2014_0437.csv
+    -rw-r--r-- 1 ich ich 2,2K Dez 16 03:33 PB_KAZ_KtoNr_0903464503_11-11-2014_0437.csv
     
     libreoffice --calc PB_KAZ_KtoNr_0903464503_11-11-2014_0437.csv
 
 evtl. die CSV-Datei ins QIF-Format umwandeln:
     
     Postbank_PDF2CSV-1.2.0/postbank_csv2qif.sh PB_KAZ_KtoNr_0903464503_11-11-2014_0437.csv 
-    -rw-r--r-- 1 manfred manfred 2,2K Dez 16 03:33 PB_KAZ_KtoNr_0903464503_11-11-2014_0437.qif
+    -rw-r--r-- 1 ich ich 2,2K Dez 16 03:33 PB_KAZ_KtoNr_0903464503_11-11-2014_0437.qif
+
+--------------------------------------------------------------------------------
+Bis 2014:
+
+den Kontoauszug aus dem PDF-Format ins CSV-Format umwandeln:
+    
+    Postbank_PDF2CSV-1.2.0/postbank_pdf2csv_bis_2013.sh Postbank/Kontoauszug_2014-01-10.pdf 
+    -rw-r--r-- 1 ich ich 2,7K Dez 16 13:55 Postbank/Kontoauszug_2014-01-10.csv
+
+evtl. die CSV-Datei ins QIF-Format umwandeln:
+    
+    Postbank_PDF2CSV-1.2.0/postbank_csv2qif_bis_2013.sh Postbank/Kontoauszug_2014-01-10.csv 
+    -rw-r--r-- 1 ich ich 2,8K Dez 16 13:57 Postbank/Kontoauszug_2014-01-10.qif
+
+--------------------------------------------------------------------------------
 
 Die Dateinamen dürfen keine Leerzeichen und keine Sonderzeichen (zum Beispiel Klammern) enthalten.
 
