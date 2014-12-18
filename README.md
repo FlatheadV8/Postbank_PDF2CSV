@@ -8,6 +8,10 @@ Beide Dateien müssen im selben Verzeichnis liegen (z.B.: ~/bin/)!
 In den Dateinamen der PDF-Dateien dürfen keine Leezeichen, Umlaute, Sonderzeichen, Klammern o.ä. sein!
 
 --------------------------------------------------------------------------------
+
+Um die neuen Skripte für die Kontoauszüge, ab Februar 2014, übersetzten zu können, reicht es nicht das Paket "ghostscript" zu installieren, hierfür müssen auch die Pakete "pstotext" und "poppler-utils" noch installiert werden!
+
+--------------------------------------------------------------------------------
 Ab 2014:
 
 beispielsweise könnte man das so machen,
