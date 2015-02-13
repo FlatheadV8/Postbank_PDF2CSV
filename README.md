@@ -12,7 +12,46 @@ In den Dateinamen der PDF-Dateien dürfen keine Leezeichen, Umlaute, Sonderzeich
 Um die neuen Skripte für die Kontoauszüge, ab Februar 2014, übersetzten zu können, reicht es nicht das Paket "ghostscript" zu installieren, hierfür müssen auch die Pakete "pstotext" und "poppler-utils" noch installiert werden!
 
 --------------------------------------------------------------------------------
-Ab 2014:
+Vorbereitungen/Installationen mit Ubuntu 14.04 bzw. Mint 17
+-----------------------------------------------------------
+
+Es wird das Kommando "bash" benötigt, das ist in der Basisinstallation der meisten Linux-Distributionen bereits vorhanden.
+
+Es werden auch die Kommandos "pdf2ps" und "ps2ascii" benötigt, um sie zu installieren, muss das folgende Installationskommando ausgeführt werden:
+    
+    aptitude update ; aptitude -y install ghostscript
+
+Es werden auch die Kommandos "pdftohtml" und "pdftops" benötigt, um sie zu installieren, muss das folgende Installationskommando ausgeführt werden:
+    
+    aptitude update ; aptitude -y install poppler-utils
+
+Es wird das Kommando "pstotext" benötigt, um es zu installieren, muss das folgende Installationskommando ausgeführt werden:
+    
+    aptitude update ; aptitude -y install pstotext
+
+--------------------------------------------------------------------------------
+Vorbereitungen/Installationen mit FreeBSD 10
+--------------------------------------------
+
+Es wird das Kommando "bash" benötigt, um es zu installieren, muss das folgende Installationskommando ausgeführt werden:
+    
+    pkg install shells/bash
+    ln -s /usr/local/bin/bash /bin/bash
+
+Es werden auch die Kommandos "pdf2ps" und "ps2ascii" benötigt, um sie zu installieren, muss das folgende Installationskommando ausgeführt werden:
+    
+    pkg install print/ghostscript9-nox11
+
+Es werden auch die Kommandos "pdftohtml" und "pdftops" benötigt, um sie zu installieren, muss das folgende Installationskommando ausgeführt werden:
+    
+    pkg install graphics/poppler-utils
+
+Es wird das Kommando "pstotext" benötigt, um es zu installieren, muss das folgende Installationskommando ausgeführt werden:
+    
+    pkg install print/pstotext
+
+--------------------------------------------------------------------------------
+Ab Juli 2014:
 
 beispielsweise könnte man das so machen,
 als erstes die neueste Version saugen:
@@ -39,7 +78,7 @@ evtl. die CSV-Datei ins QIF-Format umwandeln:
     -rw-r--r-- 1 ich ich 2,2K Dez 16 03:33 PB_KAZ_KtoNr_0903464503_11-11-2014_0437.qif
 
 --------------------------------------------------------------------------------
-Bis 2014:
+Bis Juni 2014:
 
 den Kontoauszug aus dem PDF-Format ins CSV-Format umwandeln:
     
