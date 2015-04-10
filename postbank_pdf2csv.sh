@@ -146,7 +146,7 @@ do
 	rm -f ${NEUERNAME}_Seite_${i}.txt*
 done >> ${NEUERNAME}.csv
 
-ls -lha #${NEUERNAME}.csv
+ls -lha ${NEUERNAME}.csv
 echo "
 libreoffice --calc ${NEUERNAME}.csv
 ${VERZEICHNIS}/postbank_csv2qif.sh ${NEUERNAME}.csv
