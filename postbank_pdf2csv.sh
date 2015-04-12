@@ -1,10 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #==============================================================================#
 #
 # PDF -> PS -> TXT -> CSV
 #
 #==============================================================================#
+
+VERSION="v2015041100"
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -37,6 +39,7 @@ echo "
 ================================================================================
 "
 
+#==============================================================================#
 VERZEICHNIS="$(dirname ${0})"
 
 for PDFDATEI in ${@}
@@ -50,15 +53,6 @@ do
 
 	unset NEUERNAME
 	NEUERNAME="$(echo "${PDFDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
-
-	#----------------------------------------------------------------------#
-	### Datei initialisieren
-
-	### Originalreihenfolge
-	#echo "Betrag;Vorgang/Buchungsinformation;Buchung;Wert;" > ${NEUERNAME}.csv
-
-	### bevorzugte Reihenfolge
-	echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;" > ${NEUERNAME}.csv
 
 	#----------------------------------------------------------------------#
 	### Anzahl der Seiten in der PDF-Datei ermitteln
@@ -89,18 +83,10 @@ do
 
 	### hinter den Buchungsdaten einen Zeilenumbruch einbauen
 	sed -ie 's/[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]/&\`/g;' ${NEUERNAME}_Seite_${i}.txt_1
-	#sed -ie 's/Sie m.chten unsere Angaben nicht mehr erhalten?.*//;' ${NEUERNAME}_Seite_${i}.txt_1
-	#sed -ie 's/Mit freundlichen Gr..en.*//;' ${NEUERNAME}_Seite_${i}.txt_1
-	cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' > ${NEUERNAME}_Seite_${i}.txt_2
 
-	### Werbung und Hinweise entfernen
-	sed -ie 's/[|][ \t]*$//;s/^Postbank K.*ln|Postfach|51222 K.*$//;' ${NEUERNAME}_Seite_${i}.txt_2
-	sed -ie 's/Summe Zahlungseing.*nge|BLZ|Kontonummer|.*//;' ${NEUERNAME}_Seite_${i}.txt_2
-	sed -ie 's/^Der Abschluss gilt als genehmigt, wenn Sie Ihre Einwendungen nicht binnen sechs Wochen seit Zugang dieses Abschlusses.*//;' ${NEUERNAME}_Seite_${i}.txt_2
-	sed -ie 's/^EUR|Zinsen, Porto, Versandentgelte und Entgelte.*//;' ${NEUERNAME}_Seite_${i}.txt_2
-	sed -ie 's/^.nderung der Allgemeinen Gesch.ftsbedingungen zum.*//;' ${NEUERNAME}_Seite_${i}.txt_2
+	### Zeilenumbrueche einfuehgen sowie Werbung und Hinweise entfernen
+	cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' | grep -E '[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]$' > ${NEUERNAME}_Seite_${i}.txt_
 
-	mv ${NEUERNAME}_Seite_${i}.txt_2 ${NEUERNAME}_Seite_${i}.txt_
 	cat ${NEUERNAME}_Seite_${i}.txt_ | egrep -v '^$' | while read ZEILE
 	do
 #		echo "--------------------------------------------------------"
@@ -144,13 +130,36 @@ do
 
 	### aufraeumen
 	rm -f ${NEUERNAME}_Seite_${i}.txt*
-done >> ${NEUERNAME}.csv
+done > ${NEUERNAME}.iso8859
+
+#------------------------------------------------------------------------------#
+### Datei initialisieren
+
+### Originalreihenfolge
+#echo "Betrag;Vorgang/Buchungsinformation;Buchung;Wert;" > ${NEUERNAME}.csv
+
+### bevorzugte Reihenfolge
+echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;" > ${NEUERNAME}.csv
+
+#------------------------------------------------------------------------------#
+### Zeichensatzumwandlung
+
+iconv -f ISO-8859-1 -t UTF-8 ${NEUERNAME}.iso8859 >> ${NEUERNAME}.csv && rm -f ${NEUERNAME}.iso8859
+
+#------------------------------------------------------------------------------#
+### Ergebnisse anzeigen
 
 ls -lha ${NEUERNAME}.csv
+
+done
+#==============================================================================#
+
+#------------------------------------------------------------------------------#
+### Hinweise anzeigen
+
 echo "
 libreoffice --calc ${NEUERNAME}.csv
 ${VERZEICHNIS}/postbank_csv2qif.sh ${NEUERNAME}.csv
 ------------------------------------------------------------------------"
-done
 
 #------------------------------------------------------------------------------#
