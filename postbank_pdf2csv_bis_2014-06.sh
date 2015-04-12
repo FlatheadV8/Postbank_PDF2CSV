@@ -7,6 +7,9 @@
 # erst in das PS-Format, dann in das Text-Format und zum Schluss in ein
 # CSV-Format um
 #
+# ACHTUNG !!!
+# Seit Juli 2014 wird ein anderes Format verwendet!
+#
 
 if [ -z "${1}" ] ; then
         echo "${0} Datei1.pdf Datei2.pdf Datei3.pdf"
