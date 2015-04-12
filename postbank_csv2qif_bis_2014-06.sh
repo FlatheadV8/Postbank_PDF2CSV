@@ -4,7 +4,7 @@
 # CSV -> QIF (Quicken Interchange Format)
 #
 #
-# dieses Skript wandelt die mit "postbank_pdf2csv.sh" generieren CSV-Datei in eine QIF-Datei
+# dieses Skript wandelt die mit "postbank_pdf2csv_bis_2014-06.sh" generieren CSV-Datei in eine QIF-Datei
 # für GnuCache um
 #
 # Quelle (2014-12-07):
