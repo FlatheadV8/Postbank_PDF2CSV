@@ -149,7 +149,7 @@ iconv -f ISO-8859-1 -t UTF-8 ${NEUERNAME}.iso8859 >> ${NEUERNAME}.utf8 && rm -f 
 #------------------------------------------------------------------------------#
 ### Vorzeichen werden, für die Tabellenkalkulation, leserlich gemacht
 
-cat ${NEUERNAME}.utf8 | sed -e 's/^­ /-/;s/^+ //;' ${NEUERNAME}.csv && rm -f ${NEUERNAME}.utf8
+cat ${NEUERNAME}.utf8 | sed -e 's/^­ /-/;s/^+ //;' >> ${NEUERNAME}.csv && rm -f ${NEUERNAME}.utf8
  
 #------------------------------------------------------------------------------#
 ### Ergebnisse anzeigen
