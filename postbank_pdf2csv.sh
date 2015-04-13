@@ -101,11 +101,11 @@ do
         	BETRAG="$(echo "${ERSTEZEILE}" | grep -E " [0-9][0-9.]*[,][0-9][0-9]*")"
         	if [ -n "${BETRAG}" ] ; then
 			# es ist eine Buchung mit Betrag
-                	BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's#|# / #g')"
+                	BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/\|/;/g;')"
         	else
 			# es gibt keinen Betrag, kann z.B. der Rechnungsabschluss sein
                 	ERSTEZEILE=""
-                	BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's#|# / #g')"
+                	BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/\|/;/g;')"
         	fi
 
 		### zum testen
