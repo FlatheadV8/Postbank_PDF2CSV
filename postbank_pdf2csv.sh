@@ -6,7 +6,7 @@
 #
 #==============================================================================#
 
-VERSION="v2015041100"
+VERSION="v2015041300"
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -144,12 +144,12 @@ echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;" > ${NEUERNAME}.csv
 #------------------------------------------------------------------------------#
 ### Zeichensatzumwandlung
 
-iconv -f ISO-8859-1 -t UTF-8 ${NEUERNAME}.iso8859 >> ${NEUERNAME}.csv && rm -f ${NEUERNAME}.iso8859
+iconv -f ISO-8859-1 -t UTF-8 ${NEUERNAME}.iso8859 >> ${NEUERNAME}.utf8 && rm -f ${NEUERNAME}.iso8859
 
 #------------------------------------------------------------------------------#
 ### Vorzeichen werden, für die Tabellenkalkulation, leserlich gemacht
 
-sed -ie 's/^­ /-/;s/^+ //;' ${NEUERNAME}.csv
+cat ${NEUERNAME}.utf8 | sed -e 's/^­ /-/;s/^+ //;' ${NEUERNAME}.csv && rm -f ${NEUERNAME}.utf8
  
 #------------------------------------------------------------------------------#
 ### Ergebnisse anzeigen
