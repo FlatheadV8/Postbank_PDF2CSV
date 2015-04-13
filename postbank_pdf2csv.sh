@@ -147,6 +147,11 @@ echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;" > ${NEUERNAME}.csv
 iconv -f ISO-8859-1 -t UTF-8 ${NEUERNAME}.iso8859 >> ${NEUERNAME}.csv && rm -f ${NEUERNAME}.iso8859
 
 #------------------------------------------------------------------------------#
+### Vorzeichen werden, für die Tabellenkalkulation, leserlich gemacht
+
+sed -ie 's/^­ /-/;s/^+ //;' ${NEUERNAME}.csv
+ 
+#------------------------------------------------------------------------------#
 ### Ergebnisse anzeigen
 
 ls -lha ${NEUERNAME}.csv
