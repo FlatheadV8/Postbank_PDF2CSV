@@ -77,7 +77,7 @@ do
 	### die ganze Datei in eine Zeile zmwandeln
 	### und anschl.
 	### den unbrauchbaren Anfang entfernen
-	cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' | sed 's#.*Haben|Soll|Vorgang[/]Buchungsinformation|Wert|Buchung|#\n#;' | grep -Ev '^Kontoauszug: ' > ${NEUERNAME}_Seite_${i}.txt_1
+	cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' | sed 's#.*Haben|Soll|Vorgang[/]Buchungsinformation|Wert|Buchung|#³#;' | tr -s '³' '\n' | grep -Ev '^Kontoauszug: ' > ${NEUERNAME}_Seite_${i}.txt_1
 
 	### hinter den Buchungsdaten einen Zeilenumbruch einbauen
 	sed -ie 's/[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]/&\`/g;' ${NEUERNAME}_Seite_${i}.txt_1
