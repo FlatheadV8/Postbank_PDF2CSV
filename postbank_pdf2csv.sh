@@ -6,7 +6,7 @@
 #
 #==============================================================================#
 
-VERSION="v2015041300"
+VERSION="v2015053100"
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -44,7 +44,6 @@ VERZEICHNIS="$(dirname ${0})"
 
 for PDFDATEI in ${@}
 do
-
 	#----------------------------------------------------------------------#
 	### PDF -> PS -> TXT -> CSV
 
@@ -76,10 +75,9 @@ do
 	### und diese dann in CSV-Zeiloen umwandeln
 
 	### die ganze Datei in eine Zeile zmwandeln
-	cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' > ${NEUERNAME}_Seite_${i}.txt_1
-
+	### und anschl.
 	### den unbrauchbaren Anfang entfernen
-	sed -ie 's#^.*Haben|Soll|Vorgang/Buchungsinformation|Wert|Buchung|##;' ${NEUERNAME}_Seite_${i}.txt_1
+	cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' | sed 's#.*Haben|Soll|Vorgang[/]Buchungsinformation|Wert|Buchung|#\n#;' | grep -Ev '^Kontoauszug: ' > ${NEUERNAME}_Seite_${i}.txt_1
 
 	### hinter den Buchungsdaten einen Zeilenumbruch einbauen
 	sed -ie 's/[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]/&\`/g;' ${NEUERNAME}_Seite_${i}.txt_1
@@ -87,6 +85,7 @@ do
 	### Zeilenumbrueche einfuehgen sowie Werbung und Hinweise entfernen
 	cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' | grep -E '[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]$' > ${NEUERNAME}_Seite_${i}.txt_
 
+        #j=0
 	cat ${NEUERNAME}_Seite_${i}.txt_ | egrep -v '^$' | while read ZEILE
 	do
 #		echo "--------------------------------------------------------"
@@ -101,12 +100,21 @@ do
         	BETRAG="$(echo "${ERSTEZEILE}" | grep -E " [0-9][0-9.]*[,][0-9][0-9]*")"
         	if [ -n "${BETRAG}" ] ; then
 			# es ist eine Buchung mit Betrag
-                	BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/\|/;/g;')"
+                	BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
+                	#echo "1"
+                	#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
         	else
 			# es gibt keinen Betrag, kann z.B. der Rechnungsabschluss sein
                 	ERSTEZEILE=""
-                	BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/\|/;/g;')"
+                	BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
+                	#echo "2"
+                	#echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
         	fi
+		#echo
+		#echo "----------------------------------------------------------------"
+                #j=$(echo "${j}"|awk '{print $1+1}')
+                #echo "${BLOCK}" > /tmp/BLOCK_${j}
+		#exit
 
 		### zum testen
 		#echo "
@@ -132,6 +140,7 @@ do
 	rm -f ${NEUERNAME}_Seite_${i}.txt*
 done > ${NEUERNAME}.iso8859
 
+#exit
 #------------------------------------------------------------------------------#
 ### Datei initialisieren
 
