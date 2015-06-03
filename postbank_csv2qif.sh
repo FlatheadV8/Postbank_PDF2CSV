@@ -14,7 +14,7 @@
 #
 #==============================================================================#
 
-VERSION="v2015053100"
+VERSION="v2015060300"
 
 #------------------------------------------------------------------------------#
 ### Hinweis geben
@@ -22,10 +22,6 @@ VERSION="v2015053100"
 if [ -z "${1}" ] ; then
         echo "${0} Datei1.csv"
         exit 1
-fi
-
-if [ -z "${JAHR}" ] ; then
-        JAHR="$(date +'%Y')"
 fi
 
 #------------------------------------------------------------------------------#
@@ -43,8 +39,8 @@ NEUERNAME="$(echo "${CSVDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//
 	cat "${CSVDATEI}" | grep -Ev '^Betrag;Buchung;Wert;Vorgang/Buchungsinformation;' | while read ZEILE
 	do
 		BETRAG="$(echo "${ZEILE}" | awk -F';' '{print $1}')"
-		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' -v jahr=${JAHR} '{ gsub("[.]"," "); print $2,jahr }' | awk '{print $3"-"$2"-"$1}')"
-		VERWENDUNGSZWECK="$(echo "${ZEILE}" | sed 's/;/|/;s/;/|/;' | awk -F'|' '{ print $3 }')"
+		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{print $2}')"
+		VERWENDUNGSZWECK="$(echo "${ZEILE}" | sed 's/;/|/;s/;/|/;' | awk -F'|' '{print $3}')"
 		echo -e "D${BUCHUNGSDATUM}\nM${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
 	done
 ) > ${NEUERNAME}.qif
