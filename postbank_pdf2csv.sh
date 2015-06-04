@@ -6,7 +6,7 @@
 #
 #==============================================================================#
 
-VERSION="v2015053100"
+VERSION="v2015060300"
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -68,102 +68,113 @@ do
 		pstotext ${NEUERNAME}_Seite_${i}.ps > ${NEUERNAME}_Seite_${i}.txt
 		rm -f ${NEUERNAME}_Seite_${i}.ps
 
+		#--------------------------------------------------------------#
+		### TXT -> CSV
+		#
+		### die Textdatei in Buchungsbloecke umwandeln
+		### und diese dann in CSV-Zeiloen umwandeln
+
+		### die ganze Datei in eine Zeile zmwandeln
+		### und anschl.
+		### den unbrauchbaren Anfang entfernen
+		cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' | sed 's#.*Haben|Soll|Vorgang[/]Buchungsinformation|Wert|Buchung|#³#;' | tr -s '³' '\n' | grep -Ev '^Kontoauszug: ' > ${NEUERNAME}_Seite_${i}.txt_1
+
+		### Zeitspanne des Gueltigkeitsbereiches vom Kontoauszug ermitteln
+		ZEITSPANNE="$(grep -E 'Kontoauszug: .* vom [0-3][0-9]*[.][0-3][0-9]*[.][1,2][9,0][0-9][0-9] ' ${NEUERNAME}_Seite_${i}.txt)"
+		if [ -n "${ZEITSPANNE}" ] ; then
+			#echo "${ZEITSPANNE}"
+			MONAT_JAHR_VON="$(echo "${ZEITSPANNE}" | sed 's/.* vom //;s/ bis .*//;s/[.]/ /' | rev | awk '{print $1}' | rev)"
+			MONAT_JAHR_BIS="$(echo "${ZEITSPANNE}" | sed 's/.* bis //;s/[.]/ /' | rev | awk '{print $1}' | rev)"
+		fi
+
+		### hinter den Buchungsdaten einen Zeilenumbruch einbauen
+		sed -ie 's/[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]/&\`/g;' ${NEUERNAME}_Seite_${i}.txt_1
+
+		### Zeilenumbrueche einfuehgen sowie Werbung und Hinweise entfernen
+		cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' | grep -E '[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]$' > ${NEUERNAME}_Seite_${i}.txt_
+
+        	#j=0
+		cat ${NEUERNAME}_Seite_${i}.txt_ | egrep -v '^$' | while read ZEILE
+		do
+			#echo "------------------------------------------------"
+        		BLOCK="$(echo "${ZEILE}" | tr -s '|' '\n')"
+        		#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN}
+
+        		ERSTEZEILE="$(echo "${BLOCK}" | head -n1)"
+        		ALLERLETZT="$(echo "${BLOCK}" | tail -n1)"
+        		VORLETZTEZ="$(echo "${BLOCK}" | tail -n2 | head -n1)"
+
+			# ueberpruefen ob es eine Buchung mit Betrag ist oder nicht
+        		BETRAG="$(echo "${ERSTEZEILE}" | grep -E " [0-9][0-9.]*[,][0-9][0-9]*")"
+        		if [ -n "${BETRAG}" ] ; then
+				# es ist eine Buchung mit Betrag
+                		BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
+                		#echo "1"
+                		#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
+        		else
+				# es gibt keinen Betrag, kann z.B. der Rechnungsabschluss sein
+                		ERSTEZEILE=""
+                		BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
+                		#echo "2"
+                		#echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
+        		fi
+			#echo
+			#echo "------------------------------------------------"
+                	#j=$(echo "${j}"|awk '{print $1+1}')
+                	#echo "${BLOCK}" > /tmp/BLOCK_${j}
+			#exit
+
+			### zum testen
+			#echo "
+			#========================================================
+			#ERSTEZEILE='${ERSTEZEILE}';
+			#--------------------------------------------------------
+			#BUCHUINFOS='${BUCHUINFOS}';
+			#--------------------------------------------------------
+			#VORLETZTEZ='${VORLETZTEZ}';
+			#--------------------------------------------------------
+			#ALLERLETZT='${ALLERLETZT}';
+			#--------------------------------------------------------
+			#"
+
+			### Originalreihenfolge
+        		#echo "${ERSTEZEILE};${BUCHUINFOS};${VORLETZTEZ};${ALLERLETZT};"
+
+			### bevorzugte Reihenfolge
+        		echo "${ERSTEZEILE};${VORLETZTEZ};${ALLERLETZT};${BUCHUINFOS};"
+		done
+
+		### aufraeumen
+		rm -f ${NEUERNAME}_Seite_${i}.txt*
+	done > ${NEUERNAME}.iso8859
+
+	#exit
 	#----------------------------------------------------------------------#
-	### TXT -> CSV
-	#
-	### die Textdatei in Buchungsbloecke umwandeln
-	### und diese dann in CSV-Zeiloen umwandeln
+	### Datei initialisieren
 
-	### die ganze Datei in eine Zeile zmwandeln
-	### und anschl.
-	### den unbrauchbaren Anfang entfernen
-	cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' | sed 's#.*Haben|Soll|Vorgang[/]Buchungsinformation|Wert|Buchung|#³#;' | tr -s '³' '\n' | grep -Ev '^Kontoauszug: ' > ${NEUERNAME}_Seite_${i}.txt_1
+	### Originalreihenfolge
+	#echo "Betrag;Vorgang/Buchungsinformation;Buchung;Wert;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" > ${NEUERNAME}.csv
 
-	### hinter den Buchungsdaten einen Zeilenumbruch einbauen
-	sed -ie 's/[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]/&\`/g;' ${NEUERNAME}_Seite_${i}.txt_1
+	### bevorzugte Reihenfolge
+	#echo "'${MONAT_JAHR_VON};'"
+	#echo "'${MONAT_JAHR_BIS};'"
+	#echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}"
+	echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" > ${NEUERNAME}.csv
 
-	### Zeilenumbrueche einfuehgen sowie Werbung und Hinweise entfernen
-	cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' | grep -E '[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]$' > ${NEUERNAME}_Seite_${i}.txt_
+	#----------------------------------------------------------------------#
+	### Zeichensatzumwandlung
 
-        #j=0
-	cat ${NEUERNAME}_Seite_${i}.txt_ | egrep -v '^$' | while read ZEILE
-	do
-#		echo "--------------------------------------------------------"
-        	BLOCK="$(echo "${ZEILE}" | tr -s '|' '\n')"
-        	#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN}
+	iconv -f ISO-8859-1 -t UTF-8 ${NEUERNAME}.iso8859 >> ${NEUERNAME}.utf8 && rm -f ${NEUERNAME}.iso8859
 
-        	ERSTEZEILE="$(echo "${BLOCK}" | head -n1)"
-        	ALLERLETZT="$(echo "${BLOCK}" | tail -n1)"
-        	VORLETZTEZ="$(echo "${BLOCK}" | tail -n2 | head -n1)"
+	#----------------------------------------------------------------------#
+	### Vorzeichen werden, für die Tabellenkalkulation, leserlich gemacht
 
-		# ueberpruefen ob es eine Buchung mit Betrag ist oder nicht
-        	BETRAG="$(echo "${ERSTEZEILE}" | grep -E " [0-9][0-9.]*[,][0-9][0-9]*")"
-        	if [ -n "${BETRAG}" ] ; then
-			# es ist eine Buchung mit Betrag
-                	BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
-                	#echo "1"
-                	#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
-        	else
-			# es gibt keinen Betrag, kann z.B. der Rechnungsabschluss sein
-                	ERSTEZEILE=""
-                	BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
-                	#echo "2"
-                	#echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
-        	fi
-		#echo
-		#echo "----------------------------------------------------------------"
-                #j=$(echo "${j}"|awk '{print $1+1}')
-                #echo "${BLOCK}" > /tmp/BLOCK_${j}
-		#exit
-
-		### zum testen
-		#echo "
-		#================================================================
-		#ERSTEZEILE='${ERSTEZEILE}';
-		#----------------------------------------------------------------
-		#BUCHUINFOS='${BUCHUINFOS}';
-		#----------------------------------------------------------------
-		#VORLETZTEZ='${VORLETZTEZ}';
-		#----------------------------------------------------------------
-		#ALLERLETZT='${ALLERLETZT}';
-		#----------------------------------------------------------------
-		#"
-
-		### Originalreihenfolge
-        	#echo "${ERSTEZEILE};${BUCHUINFOS};${VORLETZTEZ};${ALLERLETZT};"
-
-		### bevorzugte Reihenfolge
-        	echo "${ERSTEZEILE};${VORLETZTEZ};${ALLERLETZT};${BUCHUINFOS};"
-	done
-
-	### aufraeumen
-	rm -f ${NEUERNAME}_Seite_${i}.txt*
-done > ${NEUERNAME}.iso8859
-
-#exit
-#------------------------------------------------------------------------------#
-### Datei initialisieren
-
-### Originalreihenfolge
-#echo "Betrag;Vorgang/Buchungsinformation;Buchung;Wert;" > ${NEUERNAME}.csv
-
-### bevorzugte Reihenfolge
-echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;" > ${NEUERNAME}.csv
-
-#------------------------------------------------------------------------------#
-### Zeichensatzumwandlung
-
-iconv -f ISO-8859-1 -t UTF-8 ${NEUERNAME}.iso8859 >> ${NEUERNAME}.utf8 && rm -f ${NEUERNAME}.iso8859
-
-#------------------------------------------------------------------------------#
-### Vorzeichen werden, für die Tabellenkalkulation, leserlich gemacht
-
-cat ${NEUERNAME}.utf8 | sed -e 's/^­ /-/;s/^+ //;' >> ${NEUERNAME}.csv && rm -f ${NEUERNAME}.utf8
+	cat ${NEUERNAME}.utf8 | sed -e 's/^­ /-/;s/^+ //;' >> ${NEUERNAME}.csv && rm -f ${NEUERNAME}.utf8
  
-#------------------------------------------------------------------------------#
-### Ergebnisse anzeigen
+	#----------------------------------------------------------------------#
+	### Ergebnisse anzeigen
 
-ls -lha ${NEUERNAME}.csv
+	ls -lha ${NEUERNAME}.csv
 
 done
 #==============================================================================#
