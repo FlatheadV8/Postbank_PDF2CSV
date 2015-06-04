@@ -28,9 +28,11 @@ fi
 
 for CSVDATEI in ${@}
 do
-NEUERNAME="$(echo "${CSVDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
+	NEUERNAME="$(echo "${CSVDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
+	ZEITSPANNE="$(cat "${CSVDATEI}" | grep -E '^Betrag;Buchung;Wert;Vorgang/Buchungsinformation;' | rev | awk -F';' '{print $1,$2}' | rev)"
+	JAHR="$(echo "${ZEITSPANNE}" | awk '{gsub("[.]"," ");print $2}')"
 
-(echo '!Type:Bank'
+	(echo '!Type:Bank'
 	###
 	### CSV: Betrag;Buchung;Wert;Vorgang/Buchungsinformation;
 	###
@@ -39,13 +41,12 @@ NEUERNAME="$(echo "${CSVDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//
 	cat "${CSVDATEI}" | grep -Ev '^Betrag;Buchung;Wert;Vorgang/Buchungsinformation;' | while read ZEILE
 	do
 		BETRAG="$(echo "${ZEILE}" | awk -F';' '{print $1}')"
-		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' '{print $2}')"
-		VERWENDUNGSZWECK="$(echo "${ZEILE}" | sed 's/;/|/;s/;/|/;' | awk -F'|' '{print $3}')"
+		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' -v jahr=${JAHR} '{ gsub("[.]"," "); print $2,jahr }' | awk '{print $3"-"$2"-"$1}')"
+		VERWENDUNGSZWECK="$(echo "${ZEILE}" | sed 's/;/|/;s/;/|/;' | awk -F'|' '{ print $3 }')"
 		echo -e "D${BUCHUNGSDATUM}\nM${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
-	done
-) > ${NEUERNAME}.qif
+	done) > ${NEUERNAME}.qif
 
-ls -lh ${NEUERNAME}.qif
+	ls -lh ${NEUERNAME}.qif
 done
 
 #==============================================================================#
