@@ -14,7 +14,7 @@
 #
 #==============================================================================#
 
-VERSION="v2015060300"
+VERSION="v2015060400"
 
 #------------------------------------------------------------------------------#
 ### Hinweis geben
@@ -29,8 +29,26 @@ fi
 for CSVDATEI in ${@}
 do
 	NEUERNAME="$(echo "${CSVDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
+
+	### ZEITSPANNE='12.2014 01.2015'
 	ZEITSPANNE="$(cat "${CSVDATEI}" | grep -E '^Betrag;Buchung;Wert;Vorgang/Buchungsinformation;' | rev | awk -F';' '{print $1,$2}' | rev)"
-	JAHR="$(echo "${ZEITSPANNE}" | awk '{gsub("[.]"," ");print $2}')"
+	#echo "ZEITSPANNE='${ZEITSPANNE}'"
+
+	### MONAT_BEGINN='12'
+	MONAT_BEGINN="$(echo "${ZEITSPANNE}" | awk '{print $1}' | awk -F'.' '{print $1}')"
+	#echo "MONAT_BEGINN='${MONAT_BEGINN}'"
+
+	### JAHR_BEGINN='2014'
+	JAHR_BEGINN="$(echo "${ZEITSPANNE}" | awk '{print $1}' | awk -F'.' '{print $2}')"
+	#echo "JAHR_BEGINN='${JAHR_BEGINN}'"
+
+	### MONAT_ENDE='01'
+	MONAT_ENDE="$(echo "${ZEITSPANNE}" | awk '{print $2}' | awk -F'.' '{print $1}')"
+	#echo "MONAT_ENDE='${MONAT_ENDE}'"
+
+	### JAHR_ENDE='2015'
+	JAHR_ENDE="$(echo "${ZEITSPANNE}" | awk '{print $2}' | awk -F'.' '{print $2}')"
+	#echo "JAHR_ENDE='${JAHR_ENDE}'"
 
 	(echo '!Type:Bank'
 	###
@@ -41,8 +59,21 @@ do
 	cat "${CSVDATEI}" | grep -Ev '^Betrag;Buchung;Wert;Vorgang/Buchungsinformation;' | while read ZEILE
 	do
 		BETRAG="$(echo "${ZEILE}" | awk -F';' '{print $1}')"
-		BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' -v jahr=${JAHR} '{ gsub("[.]"," "); print $2,jahr }' | awk '{print $3"-"$2"-"$1}')"
+
+		### BUCHUNGS_MONAT="12"
+		BUCHUNGS_MONAT="$(echo "${ZEILE}" | awk -F';' '{print $2}' | awk -F'.' '{print $2}')"
+		#echo "BUCHUNGS_MONAT='${BUCHUNGS_MONAT}'"
+
+		if [ "${BUCHUNGS_MONAT}" = "${MONAT_BEGINN}" ] ; then
+			BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' -v jahr=${JAHR_BEGINN} '{ gsub("[.]"," "); print $2,jahr }' | awk '{print $3"-"$2"-"$1}')"
+		elif [ "${BUCHUNGS_MONAT}" = "${MONAT_ENDE}" ] ; then
+			BUCHUNGSDATUM="$(echo "${ZEILE}" | awk -F';' -v jahr=${JAHR_ENDE} '{ gsub("[.]"," "); print $2,jahr }' | awk '{print $3"-"$2"-"$1}')"
+		else
+			BUCHUNGSDATUM=""
+		fi
+
 		VERWENDUNGSZWECK="$(echo "${ZEILE}" | sed 's/;/|/;s/;/|/;' | awk -F'|' '{ print $3 }')"
+
 		echo -e "D${BUCHUNGSDATUM}\nM${VERWENDUNGSZWECK}\nT${BETRAG}\n^"
 	done) > ${NEUERNAME}.qif
 
