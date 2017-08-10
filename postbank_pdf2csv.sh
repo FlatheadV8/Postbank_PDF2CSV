@@ -6,7 +6,7 @@
 #
 #==============================================================================#
 
-VERSION="v2015060300"
+VERSION="v2017081000"
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -77,10 +77,10 @@ do
 		### die ganze Datei in eine Zeile zmwandeln
 		### und anschl.
 		### den unbrauchbaren Anfang entfernen
-		cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' | sed 's#.*Haben|Soll|Vorgang[/]Buchungsinformation|Wert|Buchung|#³#;' | tr -s '³' '\n' | grep -Ev '^Kontoauszug: ' > ${NEUERNAME}_Seite_${i}.txt_1
+		cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' | sed 's#.*Haben|Soll|Vorgang[/]Buchungsinformation|Wert|Buchung|#³#;' | tr -s '³' '\n' | grep -Eva '^Kontoauszug: ' > ${NEUERNAME}_Seite_${i}.txt_1
 
 		### Zeitspanne des Gueltigkeitsbereiches vom Kontoauszug ermitteln
-		ZEITSPANNE="$(grep -E 'Kontoauszug: .* vom [0-3][0-9]*[.][0-3][0-9]*[.][1,2][9,0][0-9][0-9] ' ${NEUERNAME}_Seite_${i}.txt)"
+		ZEITSPANNE="$(grep -Ea 'Kontoauszug: .* vom [0-3][0-9]*[.][0-3][0-9]*[.][1,2][9,0][0-9][0-9] ' ${NEUERNAME}_Seite_${i}.txt)"
 		if [ -n "${ZEITSPANNE}" ] ; then
 			#echo "${ZEITSPANNE}"
 			MONAT_JAHR_VON="$(echo "${ZEITSPANNE}" | sed 's/.* vom //;s/ bis .*//;s/[.]/ /' | rev | awk '{print $1}' | rev)"
@@ -91,10 +91,10 @@ do
 		sed -ie 's/[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]/&\`/g;' ${NEUERNAME}_Seite_${i}.txt_1
 
 		### Zeilenumbrueche einfuehgen sowie Werbung und Hinweise entfernen
-		cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' | grep -E '[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]$' > ${NEUERNAME}_Seite_${i}.txt_
+		cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' | grep -Ea '[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]$' > ${NEUERNAME}_Seite_${i}.txt_
 
         	#j=0
-		cat ${NEUERNAME}_Seite_${i}.txt_ | egrep -v '^$' | while read ZEILE
+		cat ${NEUERNAME}_Seite_${i}.txt_ | grep -Eva '^$' | while read ZEILE
 		do
 			#echo "------------------------------------------------"
         		BLOCK="$(echo "${ZEILE}" | tr -s '|' '\n')"
@@ -105,7 +105,7 @@ do
         		VORLETZTEZ="$(echo "${BLOCK}" | tail -n2 | head -n1)"
 
 			# ueberpruefen ob es eine Buchung mit Betrag ist oder nicht
-        		BETRAG="$(echo "${ERSTEZEILE}" | grep -E " [0-9][0-9.]*[,][0-9][0-9]*")"
+        		BETRAG="$(echo "${ERSTEZEILE}" | grep -Ea " [0-9][0-9.]*[,][0-9][0-9]*")"
         		if [ -n "${BETRAG}" ] ; then
 				# es ist eine Buchung mit Betrag
                 		BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
