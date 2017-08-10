@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+#!/usr/bin/env bash
+
+#==============================================================================#
+#
+# dieses Skript wandelt die Kontoauszüge der Postbank aus dem PDF-Format
+# erst in das PS-Format, dann in das Text-Format und zum Schluss in ein
+# CSV-Format um
+#
 #==============================================================================#
 #
 # PDF -> PS -> TXT -> CSV
@@ -12,6 +20,8 @@
 #==============================================================================#
 
 VERSION="v2017081000"
+
+#set -x
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
