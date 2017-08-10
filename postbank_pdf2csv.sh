@@ -2,7 +2,18 @@
 
 #==============================================================================#
 #
+# dieses Skript wandelt die Kontoauszüge der Postbank aus dem PDF-Format
+# erst in das PS-Format, dann in das Text-Format und zum Schluss in ein
+# CSV-Format um
+#
+#==============================================================================#
+#
 # PDF -> PS -> TXT -> CSV
+#
+#==============================================================================#
+#
+# ACHTUNG!
+# Seit Juli 2017 wird von der Postbank ein anderes PDF-Format verwendet!
 #
 #==============================================================================#
 
