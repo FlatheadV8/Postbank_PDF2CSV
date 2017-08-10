@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 
+#==============================================================================#
 #
 # dieses Skript wandelt die Kontoauszüge der Postbank aus dem PDF-Format
 # erst in das PS-Format, dann in das Text-Format und zum Schluss in ein
 # CSV-Format um
 #
-# ACHTUNG !!!
-# Seit Juli 2014 wird ein anderes Format verwendet!
+#==============================================================================#
 #
+# ACHTUNG!
+# Seit Juli 2014 wird von der Postbank ein anderes PDF-Format verwendet!
+#
+#==============================================================================#
 
 VERSION="v2017081000"
 
