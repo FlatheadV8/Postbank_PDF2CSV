@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#set -x
-
 #
 # dieses Skript wandelt die Kontoauszüge der Postbank aus dem PDF-Format
 # erst in das PS-Format, dann in das Text-Format und zum Schluss in ein
@@ -11,6 +9,10 @@
 # Seit Juli 2014 wird ein anderes Format verwendet!
 #
 
+VERSION="v2017081000"
+
+#set -x
+
 if [ -z "${1}" ] ; then
         echo "${0} Datei1.pdf Datei2.pdf Datei3.pdf"
         exit 1
@@ -19,7 +21,7 @@ fi
 #------------------------------------------------------------------------------#
 ### Funktion
 
-postbank_pdf2txt_bis_2013()
+postbank_pdf2txt_bis_062014()
 {
 #
 # diese Funktion wandelt die Dateien aus dem PDF-Format
@@ -59,7 +61,7 @@ do
 
 NEUERNAME="$(echo "${_datei}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
 
-postbank_pdf2txt_bis_2013 ${_datei} ${NEUERNAME}
+postbank_pdf2txt_bis_062014 ${_datei} ${NEUERNAME}
 
 #------------------------------------------------------------------------------#
 
@@ -72,19 +74,19 @@ echo -n "Buchungstag;Wertstellung;Betrag;Buchungsschlüssel;Buchungsart;Empfäng
 
 cat ${NEUERNAME}.txt | sed 's#a"#ä#g;s#o"#ö#g;s#u"#ü#g;s#A"#Ä#g;s#O"#Ö#g;s#U"#Ü#g' | while read TEXTZEILE
 do
-      JAHRESZAHL="$(echo "${TEXTZEILE}"|egrep "^Datum [0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]"|awk -F'.' '{print $NF}')"
+      JAHRESZAHL="$(echo "${TEXTZEILE}"|grep -Ea "^Datum [0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]"|awk -F'.' '{print $NF}')"
       if [ -n "${JAHRESZAHL}" ] ; then
               JAHR0="${JAHRESZAHL}"
       fi
       JAHRESZAHL=""
 
-      MONATSZAHL="$(echo "${TEXTZEILE}"|egrep "^Datum [0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]"|awk -F'.' '{print $(NF-1)}')"
+      MONATSZAHL="$(echo "${TEXTZEILE}"|grep -Ea "^Datum [0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]"|awk -F'.' '{print $(NF-1)}')"
       if [ -n "${MONATSZAHL}" ] ; then
               MONAT0="${MONATSZAHL}"
       fi
       MONATSZAHL=""
 
-      INHALT="$(echo "${TEXTZEILE}"|egrep "^[0-9][0-9][.][0-9][0-9][.] [0-9][0-9][.][0-9][0-9][.]")"
+      INHALT="$(echo "${TEXTZEILE}"|grep -Ea "^[0-9][0-9][.][0-9][0-9][.] [0-9][0-9][.][0-9][0-9][.]")"
       if [ -z "${TEXTZEILE}" ] ; then
               WEITER="NEIN"
               if [ -n "${VERWENDUNGSZWECK}" ] ; then
@@ -100,7 +102,7 @@ do
       else
               while read BUCHUNGSDATUM WERTSTELLUNGSDATUM PNN BUCHUNGSINFORMATION0 REST
               do
-                      MONAT1="$(echo "${BUCHUNGSDATUM}"|egrep "^[0-9][0-9][.][0-9][0-9][.]"|awk -F'.' '{print $2}')"
+                      MONAT1="$(echo "${BUCHUNGSDATUM}"|grep -Ea "^[0-9][0-9][.][0-9][0-9][.]"|awk -F'.' '{print $2}')"
 
                       if [ "${MONAT0}" -lt "${MONAT1}" ] ; then
                               JAHR1="$(echo "${JAHR0}"|awk '{print $1-1}')"
