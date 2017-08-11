@@ -2,22 +2,24 @@
 
 #==============================================================================#
 #
-# dieses Skript wandelt die Kontoauszüge der Postbank aus dem PDF-Format
-# erst in das PS-Format, dann in das Text-Format und zum Schluss in ein
-# CSV-Format um
+# Dieses Skript wandelt die Kontoauszüge der Postbank aus dem PDF-Format
+# erst in das CSV-Format um.
+#
+# Es wird das Paket "poppler-utils" benötigt.
 #
 #==============================================================================#
 #
-# PDF -> PS -> TXT -> CSV
+# PDF -> TXT -> CSV
 #
 #==============================================================================#
 #
 # ACHTUNG!
-# Seit Juli 2017 wird von der Postbank ein anderes PDF-Format verwendet!
+# Seit Juli 2017 wird von der Postbank ein anderes PDF-Format
+# für die Kontoauszüge verwendet!
 #
 #==============================================================================#
 
-VERSION="v2017081000"
+VERSION="v2017081100"
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -55,8 +57,8 @@ VERZEICHNIS="$(dirname ${0})"
 
 for PDFDATEI in ${@}
 do
-	#----------------------------------------------------------------------#
-	### PDF -> PS -> TXT -> CSV
+	#======================================================================#
+	### PDF -> TXT -> CSV
 
 	#----------------------------------------------------------------------#
 	### Dateiname ermitteln
@@ -65,123 +67,154 @@ do
 	NEUERNAME="$(echo "${PDFDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
 
 	#----------------------------------------------------------------------#
-	### Anzahl der Seiten in der PDF-Datei ermitteln
+	### die Kontoauszüge der Postbank seit Juli 2017 können so verarbeitet werden
+	### PDF -> TXT
 
-	SEITEN="$(pdftohtml -c -i -xml -enc UTF-8 -noframes -nodrm -hidden "${PDFDATEI}" ${NEUERNAME}_alle_Seiten.xml | nl | awk '{print $1}' ; rm -f ${NEUERNAME}_alle_Seiten.xml)"
+	pdftotext -fixed 8 -enc UTF-8 -eol unix "${PDFDATEI}" ${NEUERNAME}.txt
+	cat ${NEUERNAME}.txt | sed 's/^­ /-/g' > ${NEUERNAME}_.txt
+	rm -f ${NEUERNAME}.txt
 
-	#----------------------------------------------------------------------#
-	### Datei seitenweise umwandeln
+	### Kontoauszug: Postbank Giro plus vom 21.07.2017 bis 28.07.2017
+	VON_ZEILE="$(cat ${NEUERNAME}_.txt | grep -Ea '        Kontoauszug: Postbank .* vom [0-3][0-9].[0-1][0-9].20[0-9][0-9] bis [0-3][0-9].[0-1][0-9].20[0-9][0-9]')"
+	MONAT_JAHR_VON="$(echo "${VON_ZEILE}" | sed 's/.* vom //;s/ bis .*//' | awk -F'.' '{print $3"-"$2"-"$1}')"
+	MONAT_JAHR_BIS="$(echo "${VON_ZEILE}" | sed 's/.* bis //' | awk -F'.' '{print $3"-"$2"-"$1}')"
+	VON_DATUM="$(echo "${VON_ZEILE}" | sed 's/.* vom //;s/ bis .*//' | awk -F'.' '{print $2$1}')"
+	VON_JAHR="$(echo "${VON_ZEILE}" | sed 's/.* vom //;s/ bis .*//;s/.*[.]//')"
+	BIS_JAHR="$(echo "${VON_ZEILE}" | sed 's/.* bis //;s/.*[.]//')"
 
-	for i in ${SEITEN}
-	do
-		### PDF -> PS -> TXT
-		pdftops -f ${i} -l ${i} "${PDFDATEI}" ${NEUERNAME}_Seite_${i}.ps >/dev/null
-		pstotext ${NEUERNAME}_Seite_${i}.ps > ${NEUERNAME}_Seite_${i}.txt
-		rm -f ${NEUERNAME}_Seite_${i}.ps
+	ERSTE_ZEILE='          Buchung/Wert'
+	ZWEITE_ZEILE='                  Vorgang/Buchungsinformation            Soll      Haben'
+	LETZTE_ZEILE='          Kontonummer         BLZ                Summe Zahlungseingänge'
 
-		#--------------------------------------------------------------#
-		### TXT -> CSV
-		#
-		### die Textdatei in Buchungsbloecke umwandeln
-		### und diese dann in CSV-Zeiloen umwandeln
+	#ls -lha ${NEUERNAME}_.txt
+	cat ${NEUERNAME}_.txt | \
+		sed -ne "/          Buchung[/]Wert/,/${LETZTE_ZEILE}/p" | \
+		grep -Fv "${ERSTE_ZEILE}" | \
+		grep -Fv "${ZWEITE_ZEILE}" | \
+		grep -Fv "${LETZTE_ZEILE}" > \
+		${NEUERNAME}.txt
 
-		### die ganze Datei in eine Zeile zmwandeln
-		### und anschl.
-		### den unbrauchbaren Anfang entfernen
-		cat ${NEUERNAME}_Seite_${i}.txt | tr -s '\n' '|' | sed 's#.*Haben|Soll|Vorgang[/]Buchungsinformation|Wert|Buchung|#³#;' | tr -s '³' '\n' | grep -Eva '^Kontoauszug: ' > ${NEUERNAME}_Seite_${i}.txt_1
+	rm -f ${NEUERNAME}_.txt
 
-		### Zeitspanne des Gueltigkeitsbereiches vom Kontoauszug ermitteln
-		ZEITSPANNE="$(grep -Ea 'Kontoauszug: .* vom [0-3][0-9]*[.][0-3][0-9]*[.][1,2][9,0][0-9][0-9] ' ${NEUERNAME}_Seite_${i}.txt)"
-		if [ -n "${ZEITSPANNE}" ] ; then
-			#echo "${ZEITSPANNE}"
-			MONAT_JAHR_VON="$(echo "${ZEITSPANNE}" | sed 's/.* vom //;s/ bis .*//;s/[.]/ /' | rev | awk '{print $1}' | rev)"
-			MONAT_JAHR_BIS="$(echo "${ZEITSPANNE}" | sed 's/.* bis //;s/[.]/ /' | rev | awk '{print $1}' | rev)"
-		fi
-
-		### hinter den Buchungsdaten einen Zeilenumbruch einbauen
-		sed -ie 's/[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]/&\`/g;' ${NEUERNAME}_Seite_${i}.txt_1
-
-		### Zeilenumbrueche einfuehgen sowie Werbung und Hinweise entfernen
-		cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' | grep -Ea '[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]$' > ${NEUERNAME}_Seite_${i}.txt_
-
-        	#j=0
-		cat ${NEUERNAME}_Seite_${i}.txt_ | grep -Eva '^$' | while read ZEILE
-		do
-			#echo "------------------------------------------------"
-        		BLOCK="$(echo "${ZEILE}" | tr -s '|' '\n')"
-        		#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN}
-
-        		ERSTEZEILE="$(echo "${BLOCK}" | head -n1)"
-        		ALLERLETZT="$(echo "${BLOCK}" | tail -n1)"
-        		VORLETZTEZ="$(echo "${BLOCK}" | tail -n2 | head -n1)"
-
-			# ueberpruefen ob es eine Buchung mit Betrag ist oder nicht
-        		BETRAG="$(echo "${ERSTEZEILE}" | grep -Ea " [0-9][0-9.]*[,][0-9][0-9]*")"
-        		if [ -n "${BETRAG}" ] ; then
-				# es ist eine Buchung mit Betrag
-                		BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
-                		#echo "1"
-                		#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
-        		else
-				# es gibt keinen Betrag, kann z.B. der Rechnungsabschluss sein
-                		ERSTEZEILE=""
-                		BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
-                		#echo "2"
-                		#echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
-        		fi
-			#echo
-			#echo "------------------------------------------------"
-                	#j=$(echo "${j}"|awk '{print $1+1}')
-                	#echo "${BLOCK}" > /tmp/BLOCK_${j}
-			#exit
-
-			### zum testen
-			#echo "
-			#========================================================
-			#ERSTEZEILE='${ERSTEZEILE}';
-			#--------------------------------------------------------
-			#BUCHUINFOS='${BUCHUINFOS}';
-			#--------------------------------------------------------
-			#VORLETZTEZ='${VORLETZTEZ}';
-			#--------------------------------------------------------
-			#ALLERLETZT='${ALLERLETZT}';
-			#--------------------------------------------------------
-			#"
-
-			### Originalreihenfolge
-        		#echo "${ERSTEZEILE};${BUCHUINFOS};${VORLETZTEZ};${ALLERLETZT};"
-
-			### bevorzugte Reihenfolge
-        		echo "${ERSTEZEILE};${VORLETZTEZ};${ALLERLETZT};${BUCHUINFOS};"
-		done
-
-		### aufraeumen
-		rm -f ${NEUERNAME}_Seite_${i}.txt*
-	done > ${NEUERNAME}.iso8859
-
+	#echo "
+	#========================================================
+	# VON_ZEILE='${VON_ZEILE}';
+	#--------------------------------------------------------
+	# VON_DATUM='${VON_DATUM}';
+	# VON_JAHR='${VON_JAHR}';
+	# BIS_JAHR='${BIS_JAHR}';
+	#--------------------------------------------------------
+	#"
 	#exit
+
 	#----------------------------------------------------------------------#
-	### Datei initialisieren
+	### TXT -> CSV
+	#
+	### die Textdatei in Buchungsbloecke umwandeln
+	### und diese dann in CSV-Zeilen umwandeln
+
+	#----------------------------------------------------------------------#
+	### CSV-Datei initialisieren
+
+	# Konto-Informationen
+	echo "${VON_ZEILE}" | sed 's/^[ ][ ]*//' > ${NEUERNAME}.csv
+
+	#----------------------------------------------------------------------#
+	### Tabellenkopf
 
 	### Originalreihenfolge
-	#echo "Betrag;Vorgang/Buchungsinformation;Buchung;Wert;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" > ${NEUERNAME}.csv
+	#echo "Betrag;Vorgang/Buchungsinformation;Buchung;Wert;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" >> ${NEUERNAME}.csv
 
 	### bevorzugte Reihenfolge
 	#echo "'${MONAT_JAHR_VON};'"
 	#echo "'${MONAT_JAHR_BIS};'"
 	#echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}"
-	echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" > ${NEUERNAME}.csv
+	echo "Betrag;Buchung;Wert;Vorgang;Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" >> ${NEUERNAME}.csv
 
 	#----------------------------------------------------------------------#
-	### Zeichensatzumwandlung
+	### Textdatei Zeilenweise in das CSV-Format umwandeln
 
-	iconv -f ISO-8859-1 -t UTF-8 ${NEUERNAME}.iso8859 >> ${NEUERNAME}.utf8 && rm -f ${NEUERNAME}.iso8859
+	#ls -lha ${NEUERNAME}.txt
+	cat ${NEUERNAME}.txt | sed 's/^$/|/' | tr -s '\n' '³' | tr -s '|' '\n' | tr -s '³' '|' | grep -Eva '^$|^[|]$' | while read ZEILE
+	do
+		#echo "-0----------------------------------------------"
+       		#echo "ZEILE='${ZEILE}'"
+       		BLOCK="$(echo "${ZEILE}" | sed 's/|/\n/;s/|/\n/;s/|/\n/;s/|/ /g' | tr -s '|' '\n' | grep -Eva '^$' | sed 's/^[ ][ ]*//;s/[ ] [ ]*$//')"
+       		#echo "³${BLOCK}³"
+
+		#echo "-1----------------------------------------------"
+       		BUCHUNG="$(echo "${BLOCK}" | head -n1 | tr -s '/' '\n' | head -n1 | awk '{print $1}' | awk -F'.' '{print $2"-"$1}')"	# erste Zeile, erste Spalte
+		#echo "-2----------------------------------------------"
+       		WERT="$(echo "${BLOCK}" | head -n1 | tr -s '/' '\n' | tail -n1 | awk '{print $1}' | awk -F'.' '{print $2"-"$1}')"	# erste Zeile, zweite Spalte
+		#echo "-3----------------------------------------------"
+       		BETRAG="$(echo "${BLOCK}" | head -n2 | tail -n1 | awk '{print $(NF-1),$NF}')"						# zweite Zeile, beide letzte Spalten
+		#echo "-4----------------------------------------------"
+       		VORGANG="$(echo "${BLOCK}" | head -n2 | tail -n1 | sed "s/[ ]*${BETRAG}//;s/^[ ][ ]*//;s/[ ] [ ]*$//")"			# zweite Zeile, beide letzte Spalten
+		#echo "-5----------------------------------------------"
+       		BUCHUNGSINFO="$(echo "${BLOCK}" | tail -n1)"										# letzte Zeile
+
+		#========================================================
+		### das Datum um das richtige Jahr ergänzen
+
+		#--------------------------------------------------------
+		B_ZIFFERN="$(echo "${BUCHUNG}" | awk -F'-' '{print $1$2}')"
+		#echo "B_ZIFFERN='${B_ZIFFERN}';"
+		if [ "${B_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
+			DATUM_BUCHUNG="${BIS_JAHR}-${BUCHUNG}";
+		else
+			DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
+		fi
+
+		#--------------------------------------------------------
+		W_ZIFFERN="$(echo "${WERT}" | awk -F'-' '{print $1$2}')"
+		#echo "W_ZIFFERN='${W_ZIFFERN}';"
+		if [ "${W_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
+			DATUM_WERT="${BIS_JAHR}-${WERT}";
+		else
+			DATUM_WERT="${VON_JAHR}-${WERT}";
+		fi
+
+		#========================================================
+		### zum testen
+
+		#echo "
+		#========================================================
+		# BETRAG='${BETRAG}';
+		#--------------------------------------------------------
+		# BUCHUNG='${BUCHUNG}';
+		# DATUM_BUCHUNG='${DATUM_BUCHUNG}';
+		#--------------------------------------------------------
+		# WERT='${WERT}';
+		# DATUM_WERT='${DATUM_WERT}';
+		#--------------------------------------------------------
+		# VORGANG='${VORGANG}';
+		#--------------------------------------------------------
+		# BUCHUINFOS='${BUCHUINFOS}';
+		#--------------------------------------------------------
+		#"
+
+		#--------------------------------------------------------
+		### Reihenfolge der Ausgabe
+       		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO};" >> ${NEUERNAME}.csv
+
+		unset BLOCK
+		unset BUCHUNG
+		unset WERT
+		unset BETRAG
+		unset VORGANG
+		unset BUCHUNGSINFO
+		unset B_ZIFFERN
+		unset W_ZIFFERN
+		unset DATUM_BUCHUNG
+		unset DATUM_WERT
+	done
+
+	#exit
 
 	#----------------------------------------------------------------------#
-	### Vorzeichen werden, für die Tabellenkalkulation, leserlich gemacht
+	### aufräumen
+	rm -f ${NEUERNAME}.txt
 
-	cat ${NEUERNAME}.utf8 | sed -e 's/^­ /-/;s/^+ //;' >> ${NEUERNAME}.csv && rm -f ${NEUERNAME}.utf8
- 
 	#----------------------------------------------------------------------#
 	### Ergebnisse anzeigen
 
