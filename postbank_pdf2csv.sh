@@ -158,7 +158,12 @@ do
 
 		#--------------------------------------------------------
 		B_ZIFFERN="$(echo "${BUCHUNG}" | awk -F'-' '{print $1$2}')"
-		#echo "B_ZIFFERN='${B_ZIFFERN}';"
+
+		#echo "
+		# B_ZIFFERN='${B_ZIFFERN}';
+		# VON_DATUM='${VON_DATUM}';
+		#"
+
 		if [ "${B_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
 			DATUM_BUCHUNG="${BIS_JAHR}-${BUCHUNG}";
 		else
@@ -167,7 +172,12 @@ do
 
 		#--------------------------------------------------------
 		W_ZIFFERN="$(echo "${WERT}" | awk -F'-' '{print $1$2}')"
-		#echo "W_ZIFFERN='${W_ZIFFERN}';"
+
+		#echo "
+		# W_ZIFFERN='${W_ZIFFERN}';
+		# VON_DATUM='${VON_DATUM}';
+		#"
+
 		if [ "${W_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
 			DATUM_WERT="${BIS_JAHR}-${WERT}";
 		else
@@ -195,7 +205,7 @@ do
 
 		#--------------------------------------------------------
 		### Reihenfolge der Ausgabe
-       		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO};" >> ${NEUERNAME}.csv
+       		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO};" | sed 's/[ ][ ]*/ /g' >> ${NEUERNAME}.csv
 
 		unset BLOCK
 		unset BUCHUNG
