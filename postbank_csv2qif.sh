@@ -14,7 +14,8 @@
 #
 #==============================================================================#
 
-VERSION="v2015060400"
+#VERSION="v2015060400"
+VERSION="v2017102900"
 
 #------------------------------------------------------------------------------#
 ### Hinweis geben
@@ -31,7 +32,7 @@ do
 	NEUERNAME="$(echo "${CSVDATEI}" | sed 's/[( )][( )]*/_/g' | rev | sed 's/.*[.]//' | rev)"
 
 	### ZEITSPANNE='12.2014 01.2015'
-	ZEITSPANNE="$(cat "${CSVDATEI}" | grep -E '^Betrag;Buchung;Wert;Vorgang/Buchungsinformation;' | rev | awk -F';' '{print $1,$2}' | rev)"
+	ZEITSPANNE="$(cat "${CSVDATEI}" | grep -E '^Kontoauszug: |^Betrag;Buchung;Wert;Vorgang;Buchungsinformation;' | rev | awk -F';' '{print $1,$2}' | rev)"
 	#echo "ZEITSPANNE='${ZEITSPANNE}'"
 
 	### MONAT_BEGINN='12'
@@ -52,11 +53,9 @@ do
 
 	(echo '!Type:Bank'
 	###
-	### CSV: Betrag;Buchung;Wert;Vorgang/Buchungsinformation;
+	### CSV: Betrag;Buchung;Wert;Vorgang;Buchungsinformation
 	###
-	### echo -n "Buchung;Wert;Vorgang/Buchungsinformation;Soll;Haben"
-	###
-	cat "${CSVDATEI}" | grep -Ev '^Betrag;Buchung;Wert;Vorgang/Buchungsinformation;' | while read ZEILE
+	cat "${CSVDATEI}" | grep -Ev '^Kontoauszug: |^Betrag;Buchung;Wert;Vorgang;Buchungsinformation;' | while read ZEILE
 	do
 		BETRAG="$(echo "${ZEILE}" | awk -F';' '{print $1}')"
 
