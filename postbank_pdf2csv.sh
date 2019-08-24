@@ -19,7 +19,8 @@
 #
 #==============================================================================#
 
-VERSION="v2017081103"
+#VERSION="v2017081103"
+VERSION="v2019082400"
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -138,9 +139,10 @@ do
 	cat ${NEUERNAME}.txt | sed 's/^$/|/' | tr -s '\n' '³' | tr -s '|' '\n' | tr -s '³' '|' | grep -Eva '^$|^[|]$' | while read ZEILE
 	do
 		#echo "-0----------------------------------------------"
-       		#echo "ZEILE='${ZEILE}'"
+       		#echo "ZEILE='${ZEILE}'" > /tmp/ZEILE.txt
        		BLOCK="$(echo "${ZEILE}" | sed 's/|/³/;s/|/³/;s/|/³/;s/|/;/g' | tr -s '³' '\n' | grep -Eva '^$' | sed 's/^[ ][ ]*//;s/[ ] [ ]*$//')"
        		#echo "³${BLOCK}³"
+		#exit
 
 		#echo "-1----------------------------------------------"
        		BUCHUNG="$(echo "${BLOCK}" | head -n1 | tr -s '/' '\n' | head -n1 | awk '{print $1}' | awk -F'.' '{print $2"-"$1}')"	# erste Zeile, erste Spalte
@@ -149,7 +151,7 @@ do
 		#echo "-3----------------------------------------------"
        		BETRAG="$(echo "${BLOCK}" | head -n2 | tail -n1 | awk '{print $(NF-1),$NF}')"						# zweite Zeile, beide letzte Spalten
 		#echo "-4----------------------------------------------"
-       		VORGANG="$(echo "${BLOCK}" | head -n2 | tail -n1 | sed "s/[ ]*${BETRAG}//;s/^[ ][ ]*//;s/[ ] [ ]*$//")"			# zweite Zeile, beide letzte Spalten
+       		VORGANG="$(echo "${BLOCK}" | head -n2 | tail -n1 | sed "s|[ ]*${BETRAG}||;s/^[ ][ ]*//;s/[ ] [ ]*$//")"			# zweite Zeile, beide letzte Spalten
 		#echo "-5----------------------------------------------"
        		BUCHUNGSINFO="$(echo "${BLOCK}" | tail -n1)"										# letzte Zeile
 
@@ -159,13 +161,17 @@ do
 		#--------------------------------------------------------
 		B_ZIFFERN="$(echo "${BUCHUNG}" | awk -F'-' '{print $1$2}')"
 
-		#echo "
-		# B_ZIFFERN='${B_ZIFFERN}';
-		# VON_DATUM='${VON_DATUM}';
-		#"
+		if [[ "${B_ZIFFERN}" == "?(+|-)+([0-9])" ]] ; then
+		    #echo "
+		    # B_ZIFFERN='${B_ZIFFERN}';
+		    # VON_DATUM='${VON_DATUM}';
+		    #"
 
-		if [ "${B_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
+		    if [ "${B_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
 			DATUM_BUCHUNG="${BIS_JAHR}-${BUCHUNG}";
+		    else
+			DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
+		    fi
 		else
 			DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
 		fi
@@ -173,15 +179,19 @@ do
 		#--------------------------------------------------------
 		W_ZIFFERN="$(echo "${WERT}" | awk -F'-' '{print $1$2}')"
 
-		#echo "
-		# W_ZIFFERN='${W_ZIFFERN}';
-		# VON_DATUM='${VON_DATUM}';
-		#"
+		if [[ "${W_ZIFFERN}" == "?(+|-)+([0-9])" ]] ; then
+		    #echo "
+		    # W_ZIFFERN='${W_ZIFFERN}';
+		    # VON_DATUM='${VON_DATUM}';
+		    #"
 
-		if [ "${W_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
+		    if [ "${W_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
 			DATUM_WERT="${BIS_JAHR}-${WERT}";
-		else
+		    else
 			DATUM_WERT="${VON_JAHR}-${WERT}";
+		    fi
+		else
+			DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
 		fi
 
 		#========================================================
@@ -202,6 +212,7 @@ do
 		# BUCHUINFOS='${BUCHUINFOS}';
 		#--------------------------------------------------------
 		#"
+		#exit
 
 		#--------------------------------------------------------
 		### Reihenfolge der Ausgabe
