@@ -2,8 +2,8 @@
 
 #==============================================================================#
 #
-# Dieses Skript wandelt die Kontoauszüge der Postbank aus dem PDF-Format
-# erst in das CSV-Format um.
+# Dieses Skript wandelt die Kontoauszüge der Postbank
+# aus dem PDF-Format erst das CSV-Format um.
 #
 # Es wird das Paket "poppler-utils" benötigt.
 #
@@ -20,7 +20,7 @@
 #==============================================================================#
 
 #VERSION="v2017081103"
-VERSION="v2019082400"
+VERSION="v2019082500"
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -72,7 +72,9 @@ do
 	### PDF -> TXT
 
 	pdftotext -fixed 8 -enc UTF-8 -eol unix "${PDFDATEI}" ${NEUERNAME}.txt
-	cat ${NEUERNAME}.txt | sed 's/^­ /-/g' > ${NEUERNAME}_.txt
+
+	### Kontoauszug: Postbank Giro plus vom
+	cat ${NEUERNAME}.txt | sed 's/^[ ][ ]*Kontoauszug: Postbank Giro plus vom /ABCDEFG_entfernen_GFEDCBA♥&/' | tr -s '♥' '\n' | sed 's/^­ /-/g;/Unser Tipp für Sie:/,//d;/Wichtige Hinweise/,//d' > ${NEUERNAME}_.txt
 	rm -f ${NEUERNAME}.txt
 
 	### Kontoauszug: Postbank Giro plus vom 21.07.2017 bis 28.07.2017
@@ -83,19 +85,6 @@ do
 	VON_JAHR="$(echo "${VON_ZEILE}" | sed 's/.* vom //;s/ bis .*//;s/.*[.]//')"
 	BIS_JAHR="$(echo "${VON_ZEILE}" | sed 's/.* bis //;s/.*[.]//')"
 
-	ERSTE_ZEILE='          Buchung/Wert'
-	ZWEITE_ZEILE='                  Vorgang/Buchungsinformation            Soll      Haben'
-	LETZTE_ZEILE='          Kontonummer         BLZ                Summe Zahlungseingänge'
-
-	#ls -lha ${NEUERNAME}_.txt
-	cat ${NEUERNAME}_.txt | \
-		sed -ne "/          Buchung[/]Wert/,/${LETZTE_ZEILE}/p" | \
-		grep -Fv "${ERSTE_ZEILE}" | \
-		grep -Fv "${ZWEITE_ZEILE}" | \
-		grep -Fv "${LETZTE_ZEILE}" > \
-		${NEUERNAME}.txt
-
-	rm -f ${NEUERNAME}_.txt
 
 	#echo "
 	#========================================================
@@ -107,6 +96,40 @@ do
 	#--------------------------------------------------------
 	#"
 	#exit
+
+
+	#         2/6
+	#^L          AuszugJahrSeite
+	#                        von   IBAN               Übertrag
+	#          001   20183   6     DE98 3701 0050 0903 4645 03
+	#                                                 EUR              + 297,00
+
+	ZEILE_0='^[ ]+[0-9]+/[0-9]+$'
+	ZEILE_1='^.[ ]+AuszugJahrSeite$'
+	ZEILE_2='^                        von   IBAN               Übertrag$'
+	ZEILE_3='^[ ]+[0-9][0-9][0-9][ ]+[0-9][0-9][0-9][0-9][0-9][ ]+[0-9]+[ ]+[A-Z][A-Z][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9]$'
+	ZEILE_4='^[ ]+[A-Z]+[ ]+[+-][ ][0-9][0-9,-]+$'
+	ZEILE_5='^[ \t]*$'
+	ERSTE_ZEILE='          Buchung/Wert'
+	ZWEITE_ZEILE='                  Vorgang/Buchungsinformation            Soll      Haben'
+	LETZTE_ZEILE='          Kontonummer         BLZ                Summe Zahlungseingänge'
+
+	#ls -lha ${NEUERNAME}_.txt
+	cat ${NEUERNAME}_.txt | \
+		sed -ne "/          Buchung[/]Wert/,/${LETZTE_ZEILE}/p" | \
+		grep -Ev "${ZEILE_0}" | \
+		grep -Ev "${ZEILE_1}" | \
+		grep -Ev "${ZEILE_2}" | \
+		grep -Ev "${ZEILE_3}" | \
+		grep -Ev "${ZEILE_4}" | \
+		grep -Ev "${ZEILE_5}" | \
+		grep -Fv "${ERSTE_ZEILE}" | \
+		grep -Fv "${ZWEITE_ZEILE}" | \
+		grep -Fv "${LETZTE_ZEILE}" > \
+		${NEUERNAME}.txt
+
+	rm -f ${NEUERNAME}_.txt
+
 
 	#----------------------------------------------------------------------#
 	### TXT -> CSV
@@ -136,63 +159,86 @@ do
 	### Textdatei Zeilenweise in das CSV-Format umwandeln
 
 	#ls -lha ${NEUERNAME}.txt
-	cat ${NEUERNAME}.txt | sed 's/^$/|/' | tr -s '\n' '³' | tr -s '|' '\n' | tr -s '³' '|' | grep -Eva '^$|^[|]$' | while read ZEILE
+	# ☻ 13.12./13.12.; Kartenzahlung ♥- 9,62♥; Shell Deutschland Oil GmbH Referenz; 77777777704300121217777777 Mandat 277777 Einreicher-; ID DE7777772345077777 SHELL 8729// Bad Camberg /DE; Terminal 77777755 2017-12-12T08:58:56 Folgenr. 01 Verfalld.; 1912
+
+ls -lha ${NEUERNAME}.txt
+	cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/♥&♥/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss - siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
 	do
 		#echo "-0----------------------------------------------"
-       		#echo "ZEILE='${ZEILE}'" > /tmp/ZEILE.txt
-       		BLOCK="$(echo "${ZEILE}" | sed 's/|/³/;s/|/³/;s/|/³/;s/|/;/g' | tr -s '³' '\n' | grep -Eva '^$' | sed 's/^[ ][ ]*//;s/[ ] [ ]*$//')"
-       		#echo "³${BLOCK}³"
+       		BETRAG="$(echo "${ZEILE}" | awk -F'♥' '{print $2}')"
+		#echo "-1----------------------------------------------"
+       		BUCHUNG="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $1}' | awk -F'.' '{print $2"-"$1}')"
+		#echo "-2-------------------------------------"
+       		WERT="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $2}' | awk -F'.' '{print $2"-"$1}')"
+		#echo "-3-------------------------------------"
+       		VORGANG="$(echo "${ZEILE}" | sed 's/♥.*♥//' | awk -F';' '{print $2}' | sed 's/^[ ]*//;s/[ ]*$//')"
+		#echo "-4----------------------------------------------"
+       		BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*♥.*♥//;s/;;*/;/g' | sed 's/^[; ]*//;s/[ ]*$//')"
+       		#BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*♥.*♥//;s/;;*/, /g' | sed 's/^[, ]*//;s/[ ]*$//')"
+
+		#echo "
+		# ZEILE='${ZEILE}';
+		#========================================================
+		# BETRAG='${BETRAG}';
+		#--------------------------------------------------------
+		# BUCHUNG='${BUCHUNG}';
+		#--------------------------------------------------------
+		# WERT='${WERT}';
+		#--------------------------------------------------------
+		# VORGANG='${VORGANG}';
+		#--------------------------------------------------------
+		# BUCHUNGSINFO='${BUCHUNGSINFO}';
+		#--------------------------------------------------------
+		#"
 		#exit
 
-		#echo "-1----------------------------------------------"
-       		BUCHUNG="$(echo "${BLOCK}" | head -n1 | tr -s '/' '\n' | head -n1 | awk '{print $1}' | awk -F'.' '{print $2"-"$1}')"	# erste Zeile, erste Spalte
-		#echo "-2----------------------------------------------"
-       		WERT="$(echo "${BLOCK}" | head -n1 | tr -s '/' '\n' | tail -n1 | awk '{print $1}' | awk -F'.' '{print $2"-"$1}')"	# erste Zeile, zweite Spalte
-		#echo "-3----------------------------------------------"
-       		BETRAG="$(echo "${BLOCK}" | head -n2 | tail -n1 | awk '{print $(NF-1),$NF}')"						# zweite Zeile, beide letzte Spalten
-		#echo "-4----------------------------------------------"
-       		VORGANG="$(echo "${BLOCK}" | head -n2 | tail -n1 | sed "s|[ ]*${BETRAG}||;s/^[ ][ ]*//;s/[ ] [ ]*$//")"			# zweite Zeile, beide letzte Spalten
-		#echo "-5----------------------------------------------"
-       		BUCHUNGSINFO="$(echo "${BLOCK}" | tail -n1)"										# letzte Zeile
 
 		#========================================================
 		### das Datum um das richtige Jahr ergänzen
 
+
 		#--------------------------------------------------------
 		B_ZIFFERN="$(echo "${BUCHUNG}" | awk -F'-' '{print $1$2}')"
 
-		if [[ "${B_ZIFFERN}" == "?(+|-)+([0-9])" ]] ; then
-		    #echo "
-		    # B_ZIFFERN='${B_ZIFFERN}';
-		    # VON_DATUM='${VON_DATUM}';
-		    #"
+		#echo "
+		# B_ZIFFERN='${B_ZIFFERN}';
+		# VON_DATUM='${VON_DATUM}';
+		#"
+
+#		if [[ "${B_ZIFFERN}" == "?(+|-)+([0-9])" ]] ; then
 
 		    if [ "${B_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
+			#echo "# B 1"
 			DATUM_BUCHUNG="${BIS_JAHR}-${BUCHUNG}";
 		    else
+			#echo "# B 2"
 			DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
 		    fi
-		else
-			DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
-		fi
+#		else
+#			#echo "# B 3"
+#			DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
+#		fi
 
 		#--------------------------------------------------------
 		W_ZIFFERN="$(echo "${WERT}" | awk -F'-' '{print $1$2}')"
 
-		if [[ "${W_ZIFFERN}" == "?(+|-)+([0-9])" ]] ; then
-		    #echo "
-		    # W_ZIFFERN='${W_ZIFFERN}';
-		    # VON_DATUM='${VON_DATUM}';
-		    #"
+		#echo "
+		# W_ZIFFERN='${W_ZIFFERN}';
+		# VON_DATUM='${VON_DATUM}';
+		#"
 
+#		if [[ "${W_ZIFFERN}" == "?(+|-)+([0-9])" ]] ; then
 		    if [ "${W_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
+			#echo "# W 1"
 			DATUM_WERT="${BIS_JAHR}-${WERT}";
 		    else
+			#echo "# W 1"
 			DATUM_WERT="${VON_JAHR}-${WERT}";
 		    fi
-		else
-			DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
-		fi
+#		else
+#			#echo "# W 3"
+#			DATUM_WERT="${VON_JAHR}-${WERT}";
+#		fi
 
 		#========================================================
 		### zum testen
@@ -209,7 +255,7 @@ do
 		#--------------------------------------------------------
 		# VORGANG='${VORGANG}';
 		#--------------------------------------------------------
-		# BUCHUINFOS='${BUCHUINFOS}';
+		# BUCHUNGSINFO='${BUCHUNGSINFO}';
 		#--------------------------------------------------------
 		#"
 		#exit
