@@ -162,9 +162,8 @@ do
         #ls -lha ${NEUERNAME}.txt
         # ☻ 13.12./13.12.; Kartenzahlung ♥- 9,62♥; Shell Deutschland Oil GmbH Referenz; 77777777704300121217777777 Mandat 277777 Einreicher-; ID DE7777772345077777 SHELL 8729// Bad Camberg /DE; Terminal 77777755 2017-12-12T08:58:56 Folgenr. 01 Verfalld.; 1912
 
-ls -lha ${NEUERNAME}.txt
-        cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/♥&♥/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.][/][0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss
-- siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
+        ls -lha ${NEUERNAME}.txt
+        cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/♥&♥/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.][/][0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss - siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
         do
                 #echo "-0----------------------------------------------"
                 BETRAG="$(echo "${ZEILE}" | awk -F'♥' '{print $2}' | sed 's/^[ ][ ]*//')"
@@ -206,19 +205,13 @@ ls -lha ${NEUERNAME}.txt
                 # VON_DATUM='${VON_DATUM}';
                 #"
 
-#               if [[ "${B_ZIFFERN}" == "?(+|-)+([0-9])" ]] ; then
-
-                    if [ "${B_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
+                if [ "${B_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
                         #echo "# B 1"
                         DATUM_BUCHUNG="${BIS_JAHR}-${BUCHUNG}";
-                    else
+                else
                         #echo "# B 2"
                         DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
-                    fi
-#               else
-#                       #echo "# B 3"
-#                       DATUM_BUCHUNG="${VON_JAHR}-${BUCHUNG}";
-#               fi
+                fi
 
                 #--------------------------------------------------------
                 W_ZIFFERN="$(echo "${WERT}" | awk -F'-' '{print $1$2}')"
@@ -228,18 +221,13 @@ ls -lha ${NEUERNAME}.txt
                 # VON_DATUM='${VON_DATUM}';
                 #"
 
-#               if [[ "${W_ZIFFERN}" == "?(+|-)+([0-9])" ]] ; then
-                    if [ "${W_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
+                if [ "${W_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
                         #echo "# W 1"
                         DATUM_WERT="${BIS_JAHR}-${WERT}";
-                    else
+                else
                         #echo "# W 1"
                         DATUM_WERT="${VON_JAHR}-${WERT}";
-                    fi
-#               else
-#                       #echo "# W 3"
-#                       DATUM_WERT="${VON_JAHR}-${WERT}";
-#               fi
+                fi
 
                 #========================================================
                 ### zum testen
