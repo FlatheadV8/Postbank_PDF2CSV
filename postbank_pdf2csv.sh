@@ -75,7 +75,7 @@ do
         pdftotext -fixed 8 -enc UTF-8 -eol unix "${PDFDATEI}" ${NEUERNAME}.txt
 
         ### Kontoauszug: Postbank Giro plus vom
-        cat ${NEUERNAME}.txt | sed 's/^[ ][ ]*Kontoauszug: Postbank Giro plus vom /ABCDEFG_entfernen_GFEDCBA♥&/' | tr -s '♥' '\n' | sed 's/^\u00ad /-/g;/Unser Tipp für Sie:/,//d;/Wichtige Hinweise/,//d' > ${NEUERNAME}_.txt
+        cat ${NEUERNAME}.txt | sed 's/^[ ][ ]*Kontoauszug: Postbank Giro plus vom /ABCDEFG_entfernen_GFEDCBA¶&/' | tr -s '¶' '\n' | sed 's/^\u00ad /-/g;/Unser Tipp für Sie:/,//d;/Wichtige Hinweise/,//d' > ${NEUERNAME}_.txt
         rm -f ${NEUERNAME}.txt
 
         ### Kontoauszug: Postbank Giro plus vom 21.07.2017 bis 28.07.2017
@@ -160,21 +160,21 @@ do
         ### Textdatei Zeilenweise in das CSV-Format umwandeln
 
         #ls -lha ${NEUERNAME}.txt
-        # ☻ 13.12./13.12.; Kartenzahlung ♥- 9,62♥; Shell Deutschland Oil GmbH Referenz; 77777777704300121217777777 Mandat 277777 Einreicher-; ID DE7777772345077777 SHELL 8729// Bad Camberg /DE; Terminal 77777755 2017-12-12T08:58:56 Folgenr. 01 Verfalld.; 1912
+        # ☻ 13.12./13.12.; Kartenzahlung ¶- 9,62¶; Shell Deutschland Oil GmbH Referenz; 77777777704300121217777777 Mandat 277777 Einreicher-; ID DE7777772345077777 SHELL 8729// Bad Camberg /DE; Terminal 77777755 2017-12-12T08:58:56 Folgenr. 01 Verfalld.; 1912
 
         ls -lha ${NEUERNAME}.txt
-        cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/♥&♥/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.][/][0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss - siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
+        cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/¶&¶/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.][/][0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss - siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
         do
                 #echo "-0----------------------------------------------"
-                BETRAG="$(echo "${ZEILE}" | awk -F'♥' '{print $2}' | sed 's/^[ ][ ]*//')"
+                BETRAG="$(echo "${ZEILE}" | awk -F'¶' '{print $2}' | sed 's/^[ ][ ]*//')"
                 #echo "-1----------------------------------------------"
                 BUCHUNG="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
                 #echo "-2-------------------------------------"
                 WERT="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $2}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
                 #echo "-3-------------------------------------"
-                VORGANG="$(echo "${ZEILE}" | sed 's/♥.*♥//' | awk -F';' '{print $2}' | sed 's/^[ ]*//;s/[ ]*$//' | sed 's/^[ ][ ]*//')"
+                VORGANG="$(echo "${ZEILE}" | sed 's/¶.*¶//' | awk -F';' '{print $2}' | sed 's/^[ ]*//;s/[ ]*$//' | sed 's/^[ ][ ]*//')"
                 #echo "-4----------------------------------------------"
-                BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*♥.*♥//;s/;//g' | sed 's/^[ ]*//;s/[ ]*$//;s/[;][;]*/,/g;')"
+                BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*¶.*¶//;s/;//g' | sed 's/^[ ]*//;s/[ ]*$//;s/[;][;]*/,/g;')"
 
                 #echo "
                 # ZEILE='${ZEILE}';
