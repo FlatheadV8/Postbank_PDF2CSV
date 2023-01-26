@@ -51,6 +51,25 @@ Es wird das Kommando "pstotext" benötigt, um es zu installieren, muss das folge
     pkg install print/pstotext
 
 --------------------------------------------------------------------------------
+Vorbereitungen/Installationen mit MacOS
+--------------------------------------------
+**Nur 'postbank_pdf2csv.sk' v1.5.1(angepasst) getestet** 
+
+Die folgenden installation werden mit 'brew' durchgeführt. Anbei homepage https://brew.sh/index_de zur installation von 'brew'.
+
+Optional: Wenn der Download der sourcen über wget erfolgen soll:
+
+    brew install wget 
+
+Installation von gostscript
+
+    brew install ghostscript
+
+installation poppler für pstotext, pdftohtml, ...
+
+    brew install poppler
+
+--------------------------------------------------------------------------------
 Ab Juli 2014:
 
 beispielsweise könnte man das so machen,
