@@ -22,7 +22,8 @@
 #VERSION="v2017081103"
 #VERSION="v2019082500"
 #VERSION="v2020091200"		# Fehler behoben
-VERSION="v2021060400"		# ♥ gegen ¶ ausgetauscht
+#VERSION="v2021060400"		# ♥ gegen ¶ ausgetauscht
+VERSION="v2023013100"		# die RegEx, die die Variable ZEILE_4 füllt, kannte das Tausendertrennzeichen nicht
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -110,7 +111,7 @@ do
 	ZEILE_1='^.[ ]+AuszugJahrSeite$'
 	ZEILE_2='^                        von   IBAN               Übertrag$'
 	ZEILE_3='^[ ]+[0-9][0-9][0-9][ ]+[0-9][0-9][0-9][0-9][0-9][ ]+[0-9]+[ ]+[A-Z][A-Z][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9]$'
-	ZEILE_4='^[ ]+[A-Z]+[ ]+[+-][ ][0-9][0-9,-]+$'
+	ZEILE_4='^[ ]+[A-Z]+[ ]+[+-][ ][0-9][0-9,-.]+$'
 	ZEILE_5='^[ \t]*$'
 	ERSTE_ZEILE='          Buchung/Wert'
 	ZWEITE_ZEILE='                  Vorgang/Buchungsinformation            Soll      Haben'
