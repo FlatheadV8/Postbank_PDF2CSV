@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 
 #==============================================================================#
@@ -22,8 +23,7 @@
 #VERSION="v2017081103"
 #VERSION="v2019082500"
 #VERSION="v2020091200"		# Fehler behoben
-#VERSION="v2021060400"		# ♥ gegen ¶ ausgetauscht
-VERSION="v2023020500"		# Angepasst an neues Postbank pdf Format
+VERSION="v2021060400"		# ♥ gegen ¶ ausgetauscht
 
 #------------------------------------------------------------------------------#
 ### Eingabeüberprüfung
@@ -49,12 +49,12 @@ fi
 
 #------------------------------------------------------------------------------#
 ### Hinweis geben
-# Hinweis nicht mehr notwendig. Skript schell genung :-)
-#echo "
-#================================================================================
-#=> das kann jetzt ein paar Minuten dauern ...
-#================================================================================
-#"
+
+echo "
+================================================================================
+=> das kann jetzt ein paar Minuten dauern ...
+================================================================================
+"
 
 #==============================================================================#
 VERZEICHNIS="$(dirname ${0})"
@@ -62,11 +62,6 @@ VERZEICHNIS="$(dirname ${0})"
 for PDFDATEI in ${@}
 do
 	#======================================================================#
-	# Änderung
-	# PDF -> TXT erzeugt fehler
-	# Umweg
-	# PDF -> PS -> PDF -> TXT -> CSV
-
 	### PDF -> TXT -> CSV
 
 	#----------------------------------------------------------------------#
@@ -79,27 +74,21 @@ do
 	### die Kontoauszüge der Postbank seit Juli 2017 können so verarbeitet werden
 	### PDF -> TXT
 
-	cp "${PDFDATEI}" ${NEUERNAME}.pdf.orginal
-	pdftops "${PDFDATEI}" ${NEUERNAME}.ps
-	rm $"${PDFDATEI}"
-	pstopdf ${NEUERNAME}.ps -o "${PDFDATEI}"
 	pdftotext -fixed 8 -enc UTF-8 -eol unix "${PDFDATEI}" ${NEUERNAME}.txt
-	pdftotext -fixed 8 -layout -eol mac "${PDFDATEI}" tmp.txt
-    rm "${PDFDATEI}"
-    cp ${NEUERNAME}.pdf.orginal "${PDFDATEI}"
-	rm ${NEUERNAME}.pdf.orginal 
-	
-	### Kontoauszug Postbank: ( ab 01.02.2023 )
-	cat ${NEUERNAME}.txt | sed 's/^[ ][ ]*Kontoauszug vom /ABCDEFG_entfernen_GFEDCBA¶&/' | tr -s '¶' '\n' | sed 's/^­ /-/g;/Unser Tipp für Sie:/,//d;/Wichtige Hinweise/,//d' > ${NEUERNAME}_.txt
+	pdftotext -fixed 8 -enc UTF-8 -eol unix "${PDFDATEI}" old.txt
+
+	### Kontoauszug: Postbank Giro plus vom
+	cat ${NEUERNAME}.txt | sed 's/^[ ][ ]*Kontoauszug: Postbank Giro plus vom /ABCDEFG_entfernen_GFEDCBA¶&/' | tr -s '¶' '\n' | sed 's/^­ /-/g;/Unser Tipp für Sie:/,//d;/Wichtige Hinweise/,//d' > ${NEUERNAME}_.txt
 	rm -f ${NEUERNAME}.txt
-    	
-	### Kontoauszug Postbank: ( ab 01.02.2023 )
-	VON_ZEILE="$(cat ${NEUERNAME}_.txt | grep -Ea '        Kontoauszug vom [0-3][0-9].[0-1][0-9].20[0-9][0-9] bis [0-3][0-9].[0-1][0-9].20[0-9][0-9]')"
+
+	### Kontoauszug: Postbank Giro plus vom 21.07.2017 bis 28.07.2017
+	VON_ZEILE="$(cat ${NEUERNAME}_.txt | grep -Ea '        Kontoauszug: Postbank .* vom [0-3][0-9].[0-1][0-9].20[0-9][0-9] bis [0-3][0-9].[0-1][0-9].20[0-9][0-9]')"
 	MONAT_JAHR_VON="$(echo "${VON_ZEILE}" | sed 's/.* vom //;s/ bis .*//' | awk -F'.' '{print $3"-"$2"-"$1}')"
 	MONAT_JAHR_BIS="$(echo "${VON_ZEILE}" | sed 's/.* bis //' | awk -F'.' '{print $3"-"$2"-"$1}')"
 	VON_DATUM="$(echo "${VON_ZEILE}" | sed 's/.* vom //;s/ bis .*//' | awk -F'.' '{print $2$1}')"
 	VON_JAHR="$(echo "${VON_ZEILE}" | sed 's/.* vom //;s/ bis .*//;s/.*[.]//')"
 	BIS_JAHR="$(echo "${VON_ZEILE}" | sed 's/.* bis //;s/.*[.]//')"
+
 
 	#echo "
 	#========================================================
@@ -112,22 +101,36 @@ do
 	#"
 	#exit
 
-	ZEILE_1='^[ ]+[0-9]+[ ]+[0-9]+[ ]+[0-9]+[ ]+[A-Z][A-Z][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9]$'
-	ZEILE_2='^.[ ]+Buchung'
-	ZEILE_3='^.[ ]+Valuta' 	
-	ZEILE_4='^.[ ]+Vorgang[ ]+Soll[ ]+Haben'
-	ZEILE_5='^.[ ]+Auszug[ ]+Seitevon IBAN'
-	
+
+	#         2/6
+	#^L          AuszugJahrSeite
+	#                        von   IBAN               Übertrag
+	#          001   20183   6     DE98 3701 0050 0903 4645 03
+	#                                                 EUR              + 297,00
+
+	ZEILE_0='^[ ]+[0-9]+/[0-9]+$'
+	ZEILE_1='^.[ ]+AuszugJahrSeite$'
+	ZEILE_2='^                        von   IBAN               Übertrag$'
+	ZEILE_3='^[ ]+[0-9][0-9][0-9][ ]+[0-9][0-9][0-9][0-9][0-9][ ]+[0-9]+[ ]+[A-Z][A-Z][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9][0-9][0-9] [0-9][0-9]$'
+	ZEILE_4='^[ ]+[A-Z]+[ ]+[+-][ ][0-9][0-9,-]+$'
+	ZEILE_5='^[ \t]*$'
+	ERSTE_ZEILE='          Buchung/Wert'
+	ZWEITE_ZEILE='                  Vorgang/Buchungsinformation            Soll      Haben'
+	LETZTE_ZEILE='          Kontonummer         BLZ                Summe Zahlungseingänge'
 
 	#ls -lha ${NEUERNAME}_.txt
 	cat ${NEUERNAME}_.txt | \
-		sed -ne "/Vorgang                             Soll     Haben/,/BIC (SWIFT)Ihre eingeräumte Kontoüberziehung/p" | \
+		sed -ne "/          Buchung[/]Wert/,/${LETZTE_ZEILE}/p" | \
+		grep -Ev "${ZEILE_0}" | \
 		grep -Ev "${ZEILE_1}" | \
 		grep -Ev "${ZEILE_2}" | \
 		grep -Ev "${ZEILE_3}" | \
 		grep -Ev "${ZEILE_4}" | \
-		grep -Ev "${ZEILE_5}"  \
-		 > ${NEUERNAME}.txt
+		grep -Ev "${ZEILE_5}" | \
+		grep -Fv "${ERSTE_ZEILE}" | \
+		grep -Fv "${ZWEITE_ZEILE}" | \
+		grep -Fv "${LETZTE_ZEILE}" > \
+		${NEUERNAME}.txt
 
 	rm -f ${NEUERNAME}_.txt
 
@@ -153,8 +156,7 @@ do
 	#echo "'${MONAT_JAHR_VON};'"
 	#echo "'${MONAT_JAHR_BIS};'"
 	#echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}"
-	#echo "Betrag;Buchung;Wert;Vorgang;Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" >> ${NEUERNAME}.csv
-    echo "Betrag;Buchung;Wert;Vorgang;Buchungsinformation" >> ${NEUERNAME}.csv
+	echo "Betrag;Buchung;Wert;Vorgang;Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" >> ${NEUERNAME}.csv
 
 	#----------------------------------------------------------------------#
 	### Textdatei Zeilenweise in das CSV-Format umwandeln
@@ -162,21 +164,24 @@ do
 	#ls -lha ${NEUERNAME}.txt
 	# ☻ 13.12./13.12.; Kartenzahlung ¶- 9,62¶; Shell Deutschland Oil GmbH Referenz; 77777777704300121217777777 Mandat 277777 Einreicher-; ID DE7777772345077777 SHELL 8729// Bad Camberg /DE; Terminal 77777755 2017-12-12T08:58:56 Folgenr. 01 Verfalld.; 1912
 
-	#ls -lha ${NEUERNAME}.txt
-	cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/¶&¶/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.][0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss - siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
-	
+
+
+	ls -lha ${NEUERNAME}.txt
+    echo 'hallo'
+	exit
+	cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/¶&¶/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.][/][0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss - siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
 	do
-	    #echo "-0----------------------------------------------"
+		#echo "-0----------------------------------------------"
        		BETRAG="$(echo "${ZEILE}" | awk -F'¶' '{print $2}' | sed 's/^[ ][ ]*//')"
 		#echo "-1----------------------------------------------"
-       		BUCHUNG="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
+       		BUCHUNG="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
 		#echo "-2-------------------------------------"
-       		WERT="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
+       		WERT="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $2}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
 		#echo "-3-------------------------------------"
        		VORGANG="$(echo "${ZEILE}" | sed 's/¶.*¶//' | awk -F';' '{print $2}' | sed 's/^[ ]*//;s/[ ]*$//' | sed 's/^[ ][ ]*//')"
 		#echo "-4----------------------------------------------"
-       		BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*¶.*¶//;s/;//g' | sed 's/^[ ]*//;s/[ ]*$//;s/[;][;]*/,/g;' | sed 's/^20[0-9][0-9] 20[0-9][0-9] //g')"
-		
+       		BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*¶.*¶//;s/;//g' | sed 's/^[ ]*//;s/[ ]*$//;s/[;][;]*/,/g;')"
+
 		#echo "
 		# ZEILE='${ZEILE}';
 		#========================================================
@@ -191,8 +196,12 @@ do
 		# BUCHUNGSINFO='${BUCHUNGSINFO}';
 		#--------------------------------------------------------
 		#"
+		#exit
+
+
 		#========================================================
 		### das Datum um das richtige Jahr ergänzen
+
 
 		#--------------------------------------------------------
 		B_ZIFFERN="$(echo "${BUCHUNG}" | awk -F'-' '{print $1$2}')"
@@ -219,16 +228,16 @@ do
 		#"
 
 		if [ "${W_ZIFFERN}" -lt "${VON_DATUM}" ] ; then
-		#echo "# W 1"
+			#echo "# W 1"
 			DATUM_WERT="${BIS_JAHR}-${WERT}";
 		else
-		#echo "# W 1"
+			#echo "# W 1"
 			DATUM_WERT="${VON_JAHR}-${WERT}";
 		fi
 
-		#exit
+		#========================================================
+		### zum testen
 
-		## zum testen
 		#echo "
 		#========================================================
 		# BETRAG='${BETRAG}';
@@ -244,10 +253,11 @@ do
 		# BUCHUNGSINFO='${BUCHUNGSINFO}';
 		#--------------------------------------------------------
 		#"
-#
+		#exit
+
 		#--------------------------------------------------------
 		### Reihenfolge der Ausgabe
-       		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO}" | sed 's/[ ][ ]*/ /g' >> ${NEUERNAME}.csv
+       		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO};" | sed 's/[ ][ ]*/ /g' >> ${NEUERNAME}.csv
 
 		unset BLOCK
 		unset BUCHUNG
@@ -265,12 +275,12 @@ do
 
 	#----------------------------------------------------------------------#
 	### aufräumen
-#	rm -f ${NEUERNAME}.txt
+	rm -f ${NEUERNAME}.txt
 
 	#----------------------------------------------------------------------#
 	### Ergebnisse anzeigen
 
-	#ls -lha ${NEUERNAME}.csv
+	ls -lha ${NEUERNAME}.csv
 
 done
 #==============================================================================#
@@ -278,9 +288,9 @@ done
 #------------------------------------------------------------------------------#
 ### Hinweise anzeigen
 
-#echo "
-#libreoffice --calc ${NEUERNAME}.csv
-#${VERZEICHNIS}/postbank_csv2qif.sh ${NEUERNAME}.csv
-#------------------------------------------------------------------------"
+echo "
+libreoffice --calc ${NEUERNAME}.csv
+${VERZEICHNIS}/postbank_csv2qif.sh ${NEUERNAME}.csv
+------------------------------------------------------------------------"
 
 #------------------------------------------------------------------------------#
