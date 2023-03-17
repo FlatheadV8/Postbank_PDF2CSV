@@ -119,7 +119,7 @@ do
 
 	#ls -lha ${NEUERNAME}_.txt
 	cat ${NEUERNAME}_.txt | \
-		sed -ne "/          Buchung[/]Wert/,/${LETZTE_ZEILE}/p" | \
+		sed -nre "/          Buchung[/]Wert/,/${LETZTE_ZEILE}/p" | \
 		grep -Ev "${ZEILE_0}" | \
 		grep -Ev "${ZEILE_1}" | \
 		grep -Ev "${ZEILE_2}" | \
@@ -128,7 +128,7 @@ do
 		grep -Ev "${ZEILE_5}" | \
 		grep -Fv "${ERSTE_ZEILE}" | \
 		grep -Fv "${ZWEITE_ZEILE}" | \
-		grep -Fv "${LETZTE_ZEILE}" > \
+		grep -Ev "${LETZTE_ZEILE}" > \
 		${NEUERNAME}.txt
 
 	rm -f ${NEUERNAME}_.txt
