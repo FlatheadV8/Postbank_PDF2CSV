@@ -36,12 +36,12 @@ fi
 #------------------------------------------------------------------------------#
 ### Betriebssystem-Werkzeug-Name setzen
 
-if [ "$(uname -o)" = "FreeBSD" ] || [ "$(uname -o)" = "Darwin" ]  ; then
+if [ "$(uname -o)" = "FreeBSD" ] || [ "$(uname -o)" = "Darwin" ] ; then
         UMDREHEN="tail -r"
 elif [ "$(uname -o)" = "GNU/Linux" ] ; then
         UMDREHEN="tac"
 else
-        echo "Dieses Skript funktioniert nur mit FreeBSD, Linux or MacOS."
+        echo "Dieses Skript funktioniert nur mit FreeBSD, Linux oder MacOS."
         exit 1
 fi
 
