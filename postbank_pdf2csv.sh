@@ -39,12 +39,12 @@ fi
 ### Betriebssystem-Werkzeug-Name setzen
 
 if [ "$(uname -o)" = "FreeBSD" ] || [ "$(uname -o)" = "Darwin" ] ; then
-        UMDREHEN="tail -r"
+	UMDREHEN="tail -r"
 elif [ "$(uname -o)" = "GNU/Linux" ] ; then
-        UMDREHEN="tac"
+	UMDREHEN="tac"
 else
-        echo "Dieses Skript funktioniert nur mit FreeBSD, Linux oder MacOS."
-        exit 1
+	echo "Dieses Skript funktioniert nur mit FreeBSD, Linux oder MacOS."
+	exit 1
 fi
 
 #------------------------------------------------------------------------------#
@@ -84,14 +84,14 @@ do
 	pstopdf ${NEUERNAME}.ps -o "${PDFDATEI}"
 	pdftotext -fixed 8 -enc UTF-8 -eol unix "${PDFDATEI}" ${NEUERNAME}.txt
 	pdftotext -fixed 8 -layout -eol mac "${PDFDATEI}" tmp.txt
-    rm "${PDFDATEI}"
-    cp ${NEUERNAME}.pdf.orginal "${PDFDATEI}"
+	rm "${PDFDATEI}"
+	cp ${NEUERNAME}.pdf.orginal "${PDFDATEI}"
 	rm ${NEUERNAME}.pdf.orginal 
 	
 	### Kontoauszug Postbank: ( ab 01.02.2023 )
 	cat ${NEUERNAME}.txt | sed 's/^[ ][ ]*Kontoauszug vom /ABCDEFG_entfernen_GFEDCBA¶&/' | tr -s '¶' '\n' | sed 's/^­ /-/g;/Unser Tipp für Sie:/,//d;/Wichtige Hinweise/,//d' > ${NEUERNAME}_.txt
 	rm -f ${NEUERNAME}.txt
-    	
+
 	### Kontoauszug Postbank: ( ab 01.02.2023 )
 	VON_ZEILE="$(cat ${NEUERNAME}_.txt | grep -Ea '        Kontoauszug vom [0-3][0-9].[0-1][0-9].20[0-9][0-9] bis [0-3][0-9].[0-1][0-9].20[0-9][0-9]')"
 	MONAT_JAHR_VON="$(echo "${VON_ZEILE}" | sed 's/.* vom //;s/ bis .*//' | awk -F'.' '{print $3"-"$2"-"$1}')"
@@ -153,7 +153,7 @@ do
 	#echo "'${MONAT_JAHR_BIS};'"
 	#echo "Betrag;Buchung;Wert;Vorgang/Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}"
 	#echo "Betrag;Buchung;Wert;Vorgang;Buchungsinformation;${MONAT_JAHR_VON};${MONAT_JAHR_BIS}" >> ${NEUERNAME}.csv
-    echo "Betrag;Buchung;Wert;Vorgang;Buchungsinformation" >> ${NEUERNAME}.csv
+	echo "Betrag;Buchung;Wert;Vorgang;Buchungsinformation" >> ${NEUERNAME}.csv
 
 	#----------------------------------------------------------------------#
 	### Textdatei Zeilenweise in das CSV-Format umwandeln
@@ -165,16 +165,16 @@ do
 	cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/¶&¶/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.][0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss - siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
 	
 	do
-	    #echo "-0----------------------------------------------"
-       		BETRAG="$(echo "${ZEILE}" | awk -F'¶' '{print $2}' | sed 's/^[ ][ ]*//')"
+		#echo "-0----------------------------------------------"
+		BETRAG="$(echo "${ZEILE}" | awk -F'¶' '{print $2}' | sed 's/^[ ][ ]*//')"
 		#echo "-1----------------------------------------------"
-       		BUCHUNG="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
+		BUCHUNG="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
 		#echo "-2-------------------------------------"
-       		WERT="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
+		WERT="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
 		#echo "-3-------------------------------------"
-       		VORGANG="$(echo "${ZEILE}" | sed 's/¶.*¶//' | awk -F';' '{print $2}' | sed 's/^[ ]*//;s/[ ]*$//' | sed 's/^[ ][ ]*//')"
+		VORGANG="$(echo "${ZEILE}" | sed 's/¶.*¶//' | awk -F';' '{print $2}' | sed 's/^[ ]*//;s/[ ]*$//' | sed 's/^[ ][ ]*//')"
 		#echo "-4----------------------------------------------"
-       		BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*¶.*¶//;s/;//g' | sed 's/^[ ]*//;s/[ ]*$//;s/[;][;]*/,/g;' | sed 's/^20[0-9][0-9] 20[0-9][0-9] //g')"
+		BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*¶.*¶//;s/;//g' | sed 's/^[ ]*//;s/[ ]*$//;s/[;][;]*/,/g;' | sed 's/^20[0-9][0-9] 20[0-9][0-9] //g')"
 		
 		#echo "
 		# ZEILE='${ZEILE}';
@@ -243,10 +243,10 @@ do
 		# BUCHUNGSINFO='${BUCHUNGSINFO}';
 		#--------------------------------------------------------
 		#"
-#
+
 		#--------------------------------------------------------
 		### Reihenfolge der Ausgabe
-       		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO}" | sed 's/[ ][ ]*/ /g' >> ${NEUERNAME}.csv
+		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO}" | sed 's/[ ][ ]*/ /g' >> ${NEUERNAME}.csv
 
 		unset BLOCK
 		unset BUCHUNG
@@ -264,7 +264,7 @@ do
 
 	#----------------------------------------------------------------------#
 	### aufräumen
-#	rm -f ${NEUERNAME}.txt
+	#rm -f ${NEUERNAME}.txt
 
 	#----------------------------------------------------------------------#
 	### Ergebnisse anzeigen

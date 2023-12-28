@@ -12,8 +12,8 @@
 #
 
 if [ -z "${1}" ] ; then
-        echo "${0} Datei1.csv Datei2.csv Datei3.csv"
-        exit 1
+	echo "${0} Datei1.csv Datei2.csv Datei3.csv"
+	exit 1
 fi
 
 #------------------------------------------------------------------------------#

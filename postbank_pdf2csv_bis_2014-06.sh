@@ -18,8 +18,8 @@ VERSION="v2017081000"
 #set -x
 
 if [ -z "${1}" ] ; then
-        echo "${0} Datei1.pdf Datei2.pdf Datei3.pdf"
-        exit 1
+	echo "${0} Datei1.pdf Datei2.pdf Datei3.pdf"
+	exit 1
 fi
 
 #------------------------------------------------------------------------------#
@@ -35,18 +35,18 @@ postbank_pdf2txt_bis_062014()
 #echo "Parameter: ${1} ${2}"
 
 if [ -z "${2}" ] ; then
-        echo "${0} Datei1.pdf Datei1"
-        exit 1
+	echo "${0} Datei1.pdf Datei1"
+	exit 1
 fi
 
 if [ -z "$(which pdf2ps)" ] ; then
-        echo "pdf2ps (Ghostscript) ist nicht installiert"
-        exit 1
+	echo "pdf2ps (Ghostscript) ist nicht installiert"
+	exit 1
 fi
 
 if [ -z "$(which ps2ascii)" ] ; then
-        echo "ps2ascii (Ghostscript) ist nicht installiert"
-        exit 1
+	echo "ps2ascii (Ghostscript) ist nicht installiert"
+	exit 1
 fi
 
 #echo "pdf2ps ${1} ${2}.ps"
@@ -78,61 +78,60 @@ echo -n "Buchungstag;Wertstellung;Betrag;Buchungsschlüssel;Buchungsart;Empfäng
 
 cat ${NEUERNAME}.txt | sed 's#a"#ä#g;s#o"#ö#g;s#u"#ü#g;s#A"#Ä#g;s#O"#Ö#g;s#U"#Ü#g' | while read TEXTZEILE
 do
-      JAHRESZAHL="$(echo "${TEXTZEILE}"|grep -Ea "^Datum [0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]"|awk -F'.' '{print $NF}')"
-      if [ -n "${JAHRESZAHL}" ] ; then
-              JAHR0="${JAHRESZAHL}"
-      fi
-      JAHRESZAHL=""
+	JAHRESZAHL="$(echo "${TEXTZEILE}"|grep -Ea "^Datum [0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]"|awk -F'.' '{print $NF}')"
+	if [ -n "${JAHRESZAHL}" ] ; then
+		JAHR0="${JAHRESZAHL}"
+	fi
+	JAHRESZAHL=""
 
-      MONATSZAHL="$(echo "${TEXTZEILE}"|grep -Ea "^Datum [0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]"|awk -F'.' '{print $(NF-1)}')"
-      if [ -n "${MONATSZAHL}" ] ; then
-              MONAT0="${MONATSZAHL}"
-      fi
-      MONATSZAHL=""
+	MONATSZAHL="$(echo "${TEXTZEILE}"|grep -Ea "^Datum [0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]"|awk -F'.' '{print $(NF-1)}')"
+	if [ -n "${MONATSZAHL}" ] ; then
+		MONAT0="${MONATSZAHL}"
+	fi
+	MONATSZAHL=""
 
-      INHALT="$(echo "${TEXTZEILE}"|grep -Ea "^[0-9][0-9][.][0-9][0-9][.] [0-9][0-9][.][0-9][0-9][.]")"
-      if [ -z "${TEXTZEILE}" ] ; then
-              WEITER="NEIN"
-              if [ -n "${VERWENDUNGSZWECK}" ] ; then
-                      echo -n "${VERWENDUNGSZWECK};"
-                      VERWENDUNGSZWECK=""
-              fi
-      fi
+	INHALT="$(echo "${TEXTZEILE}"|grep -Ea "^[0-9][0-9][.][0-9][0-9][.] [0-9][0-9][.][0-9][0-9][.]")"
+	if [ -z "${TEXTZEILE}" ] ; then
+		WEITER="NEIN"
+		if [ -n "${VERWENDUNGSZWECK}" ] ; then
+			echo -n "${VERWENDUNGSZWECK};"
+			VERWENDUNGSZWECK=""
+		fi
+	fi
 
-      if [ -z "${INHALT}" ] ; then
-              if [ "${WEITER}" == "JA" ] ; then
-                      VERWENDUNGSZWECK="${VERWENDUNGSZWECK};${TEXTZEILE}"
-              fi
-      else
-              while read BUCHUNGSDATUM WERTSTELLUNGSDATUM PNN BUCHUNGSINFORMATION0 REST
-              do
-                      MONAT1="$(echo "${BUCHUNGSDATUM}"|grep -Ea "^[0-9][0-9][.][0-9][0-9][.]"|awk -F'.' '{print $2}')"
+	if [ -z "${INHALT}" ] ; then
+		if [ "${WEITER}" == "JA" ] ; then
+			VERWENDUNGSZWECK="${VERWENDUNGSZWECK};${TEXTZEILE}"
+		fi
+	else
+		while read BUCHUNGSDATUM WERTSTELLUNGSDATUM PNN BUCHUNGSINFORMATION0 REST
+		do
+			MONAT1="$(echo "${BUCHUNGSDATUM}"|grep -Ea "^[0-9][0-9][.][0-9][0-9][.]"|awk -F'.' '{print $2}')"
 
-                      if [ "${MONAT0}" -lt "${MONAT1}" ] ; then
-                              JAHR1="$(echo "${JAHR0}"|awk '{print $1-1}')"
-                      else
-                              JAHR1="${JAHR0}"
-                      fi
-                      BUCHUNGSDATUM="$(echo "${BUCHUNGSDATUM}${JAHR1}"|awk -F'.' '{print $3"-"$2"-"$1}')"
+			if [ "${MONAT0}" -lt "${MONAT1}" ] ; then
+				JAHR1="$(echo "${JAHR0}"|awk '{print $1-1}')"
+			else
+				JAHR1="${JAHR0}"
+			fi
+			BUCHUNGSDATUM="$(echo "${BUCHUNGSDATUM}${JAHR1}"|awk -F'.' '{print $3"-"$2"-"$1}')"
 
-                      while read PM1 BETRAG1 BUCHUNGSINFORMATION1
-                      do
-                              PM2="$(echo "${PM1}" | rev)"
-                              BETRAG2="$(echo "${BETRAG1}" | rev)"
-                              BUCHUNGSINFORMATION2="$(echo "${BUCHUNGSINFORMATION1}" | rev)"
+			while read PM1 BETRAG1 BUCHUNGSINFORMATION1
+			do
+				PM2="$(echo "${PM1}" | rev)"
+				BETRAG2="$(echo "${BETRAG1}" | rev)"
+				BUCHUNGSINFORMATION2="$(echo "${BUCHUNGSINFORMATION1}" | rev)"
 
-                              echo ""
-                              ### original Postbank-Reihenfolge
-                              #echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2};${BETRAG2};${PM2};"
+				echo ""
+				### original Postbank-Reihenfolge
+				#echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2};${BETRAG2};${PM2};"
 
-                              ### 1822-Reihenfolge
-                              echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PM2}${BETRAG2};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2}"
+				### 1822-Reihenfolge
+				echo -n "${BUCHUNGSDATUM};${WERTSTELLUNGSDATUM};${PM2}${BETRAG2};${PNN};${BUCHUNGSINFORMATION0} ${BUCHUNGSINFORMATION2}"
 
-                              WEITER="JA"
-
-                      done < <(echo "${REST}" | rev)
-              done < <(echo "${INHALT}")
-      fi
+				WEITER="JA"
+			done < <(echo "${REST}" | rev)
+		done < <(echo "${INHALT}")
+	fi
 done | sort -n
 ) > ${NEUERNAME}.csv
 
