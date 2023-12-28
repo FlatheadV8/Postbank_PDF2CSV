@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 #==============================================================================#
@@ -39,12 +38,12 @@ fi
 ### Betriebssystem-Werkzeug-Name setzen
 
 if [ "$(uname -o)" = "FreeBSD"  ] || [ "$(uname -o)" = "Darwin" ] ; then
-        UMDREHEN="tail -r"
+	UMDREHEN="tail -r"
 elif [ "$(uname -o)" = "GNU/Linux" ] ; then
-        UMDREHEN="tac"
+	UMDREHEN="tac"
 else
-        echo "Dieses Skript funktioniert nur mit FreeBSD, Linux or Macos."
-        exit 1
+	echo "Dieses Skript funktioniert nur mit FreeBSD, Linux or Macos."
+	exit 1
 fi
 
 #------------------------------------------------------------------------------#
@@ -164,23 +163,21 @@ do
 	#ls -lha ${NEUERNAME}.txt
 	# ☻ 13.12./13.12.; Kartenzahlung ¶- 9,62¶; Shell Deutschland Oil GmbH Referenz; 77777777704300121217777777 Mandat 277777 Einreicher-; ID DE7777772345077777 SHELL 8729// Bad Camberg /DE; Terminal 77777755 2017-12-12T08:58:56 Folgenr. 01 Verfalld.; 1912
 
-
-
 	ls -lha ${NEUERNAME}.txt
-    echo 'hallo'
+	echo 'hallo'
 	exit
 	cat ${NEUERNAME}.txt | sed 's/[+-] [0-9][0-9]*[0-9,.]*$/¶&¶/;s/^[ ][ ]*[0-3][0-9][.][0-1][0-9][.][/][0-3][0-9][.][0-1][0-9][.]/☻&/' | tr -s '\n' ';' | sed 's/  */ /g;s/^;//;s/;$//' | tr -s '☻' '\n' | grep -Fv 'Rechnungsabschluss - siehe Hinweis' | grep -Ev '^[ ]*$' | while read ZEILE
 	do
 		#echo "-0----------------------------------------------"
-       		BETRAG="$(echo "${ZEILE}" | awk -F'¶' '{print $2}' | sed 's/^[ ][ ]*//')"
+		BETRAG="$(echo "${ZEILE}" | awk -F'¶' '{print $2}' | sed 's/^[ ][ ]*//')"
 		#echo "-1----------------------------------------------"
-       		BUCHUNG="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
+		BUCHUNG="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $1}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
 		#echo "-2-------------------------------------"
-       		WERT="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $2}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
+		WERT="$(echo "${ZEILE}" | awk -F';' '{gsub("[ ]+","");print $1}' | awk -F'/' '{print $2}' | awk -F'.' '{print $2"-"$1}' | sed 's/^[ ][ ]*//')"
 		#echo "-3-------------------------------------"
-       		VORGANG="$(echo "${ZEILE}" | sed 's/¶.*¶//' | awk -F';' '{print $2}' | sed 's/^[ ]*//;s/[ ]*$//' | sed 's/^[ ][ ]*//')"
+		VORGANG="$(echo "${ZEILE}" | sed 's/¶.*¶//' | awk -F';' '{print $2}' | sed 's/^[ ]*//;s/[ ]*$//' | sed 's/^[ ][ ]*//')"
 		#echo "-4----------------------------------------------"
-       		BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*¶.*¶//;s/;//g' | sed 's/^[ ]*//;s/[ ]*$//;s/[;][;]*/,/g;')"
+		BUCHUNGSINFO="$(echo "${ZEILE}" | sed 's/^.*¶.*¶//;s/;//g' | sed 's/^[ ]*//;s/[ ]*$//;s/[;][;]*/,/g;')"
 
 		#echo "
 		# ZEILE='${ZEILE}';
@@ -198,10 +195,8 @@ do
 		#"
 		#exit
 
-
 		#========================================================
 		### das Datum um das richtige Jahr ergänzen
-
 
 		#--------------------------------------------------------
 		B_ZIFFERN="$(echo "${BUCHUNG}" | awk -F'-' '{print $1$2}')"
@@ -257,7 +252,7 @@ do
 
 		#--------------------------------------------------------
 		### Reihenfolge der Ausgabe
-       		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO};" | sed 's/[ ][ ]*/ /g' >> ${NEUERNAME}.csv
+		echo "${BETRAG};${DATUM_BUCHUNG};${DATUM_WERT};${VORGANG};${BUCHUNGSINFO};" | sed 's/[ ][ ]*/ /g' >> ${NEUERNAME}.csv
 
 		unset BLOCK
 		unset BUCHUNG
@@ -279,7 +274,6 @@ do
 
 	#----------------------------------------------------------------------#
 	### Ergebnisse anzeigen
-
 	ls -lha ${NEUERNAME}.csv
 
 done

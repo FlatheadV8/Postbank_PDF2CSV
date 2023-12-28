@@ -1,5 +1,5 @@
+*.txt
+*.csv
 *.pdf
 *.ps
-*.txt
 *.DS_Store
-*.csv

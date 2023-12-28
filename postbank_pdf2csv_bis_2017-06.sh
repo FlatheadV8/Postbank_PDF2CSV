@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#!/usr/bin/env bash
-
 #==============================================================================#
 #
 # dieses Skript wandelt die Kontoauszüge der Postbank aus dem PDF-Format
@@ -37,12 +35,12 @@ fi
 ### Betriebssystem-Werkzeug-Name setzen
 
 if [ "$(uname -o)" = "FreeBSD" ] || [ "$(uname -o)" = "Darwin" ] ; then
-        UMDREHEN="tail -r"
+		UMDREHEN="tail -r"
 elif [ "$(uname -o)" = "GNU/Linux" ] ; then
-        UMDREHEN="tac"
+		UMDREHEN="tac"
 else
-        echo "Dieses Skript funktioniert nur mit FreeBSD, Linux oder MacOS."
-        exit 1
+		echo "Dieses Skript funktioniert nur mit FreeBSD, Linux oder MacOS."
+		exit 1
 fi
 
 #------------------------------------------------------------------------------#
@@ -108,35 +106,35 @@ do
 		### Zeilenumbrueche einfuehgen sowie Werbung und Hinweise entfernen
 		cat ${NEUERNAME}_Seite_${i}.txt_1 | tr -s '[`]' '\n' | grep -Ea '[|][0-3][0-9][.][0-1][0-9][.][|][0-3][0-9][.][0-1][0-9][.][|]$' > ${NEUERNAME}_Seite_${i}.txt_
 
-        	#j=0
+			#j=0
 		cat ${NEUERNAME}_Seite_${i}.txt_ | grep -Eva '^$' | while read ZEILE
 		do
 			#echo "------------------------------------------------"
-        		BLOCK="$(echo "${ZEILE}" | tr -s '|' '\n')"
-        		#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN}
+				BLOCK="$(echo "${ZEILE}" | tr -s '|' '\n')"
+				#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN}
 
-        		ERSTEZEILE="$(echo "${BLOCK}" | head -n1)"
-        		ALLERLETZT="$(echo "${BLOCK}" | tail -n1)"
-        		VORLETZTEZ="$(echo "${BLOCK}" | tail -n2 | head -n1)"
+				ERSTEZEILE="$(echo "${BLOCK}" | head -n1)"
+				ALLERLETZT="$(echo "${BLOCK}" | tail -n1)"
+				VORLETZTEZ="$(echo "${BLOCK}" | tail -n2 | head -n1)"
 
 			# ueberpruefen ob es eine Buchung mit Betrag ist oder nicht
-        		BETRAG="$(echo "${ERSTEZEILE}" | grep -Ea " [0-9][0-9.]*[,][0-9][0-9]*")"
-        		if [ -n "${BETRAG}" ] ; then
+				BETRAG="$(echo "${ERSTEZEILE}" | grep -Ea " [0-9][0-9.]*[,][0-9][0-9]*")"
+				if [ -n "${BETRAG}" ] ; then
 				# es ist eine Buchung mit Betrag
-                		BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
-                		#echo "1"
-                		#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
-        		else
+						BUCHUINFOS="$(echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
+						#echo "1"
+						#echo "${BLOCK}" | tail -n +2 | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
+				else
 				# es gibt keinen Betrag, kann z.B. der Rechnungsabschluss sein
-                		ERSTEZEILE=""
-                		BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
-                		#echo "2"
-                		#echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
-        		fi
+						ERSTEZEILE=""
+						BUCHUINFOS="$(echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;')"
+						#echo "2"
+						#echo "${BLOCK}" | ${UMDREHEN} | tail -n +3 | ${UMDREHEN} | tr -s '\n' '|' | sed 's/\|$//;s/|/;/g;'
+				fi
 			#echo
 			#echo "------------------------------------------------"
-                	#j=$(echo "${j}"|awk '{print $1+1}')
-                	#echo "${BLOCK}" > /tmp/BLOCK_${j}
+					#j=$(echo "${j}"|awk '{print $1+1}')
+					#echo "${BLOCK}" > /tmp/BLOCK_${j}
 			#exit
 
 			### zum testen
@@ -153,10 +151,10 @@ do
 			#"
 
 			### Originalreihenfolge
-        		#echo "${ERSTEZEILE};${BUCHUINFOS};${VORLETZTEZ};${ALLERLETZT};"
+				#echo "${ERSTEZEILE};${BUCHUINFOS};${VORLETZTEZ};${ALLERLETZT};"
 
 			### bevorzugte Reihenfolge
-        		echo "${ERSTEZEILE};${VORLETZTEZ};${ALLERLETZT};${BUCHUINFOS};"
+				echo "${ERSTEZEILE};${VORLETZTEZ};${ALLERLETZT};${BUCHUINFOS};"
 		done
 
 		### aufraeumen
